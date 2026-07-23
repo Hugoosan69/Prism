@@ -23,8 +23,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<chave publishable do projeto>
 ## Setup do Supabase (feito uma única vez)
 
 1. Projeto "Prism" na região `sa-east-1`.
-2. Migrations em `initial_schema` e `storage_bucket_and_owner_policies` (tabelas: tasks, attachments, snippets, notes, folders, files, bookmarks; bucket privado `files`).
-3. RLS: todas as tabelas e o storage restritos ao e-mail do dono (`hugosantoss1423@gmail.com`).
+2. Aplicar `supabase/migrations/*.sql` em ordem no SQL Editor (tabelas: tasks, attachments, snippets, notes, folders, files, bookmarks; bucket privado `files`).
+3. RLS: todas as tabelas e o storage restritos ao dono pela função `public.is_owner()`, hoje `hugoosan69@gmail.com`. Para trocar de conta, alterar só essa função.
 4. Criar o usuário no Dashboard (Authentication → Users → Add user, com auto-confirm) e desabilitar signups públicos (Authentication → Sign In / Up → desmarcar "Allow new users to sign up").
 
 ## Deploy (Vercel)

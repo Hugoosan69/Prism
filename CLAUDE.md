@@ -5,9 +5,10 @@ Organizador pessoal de usuário único (Hugo). Filosofia: simplicidade extrema �
 ## Stack e decisões
 
 - Next.js 15 (App Router) + React 19 + TypeScript + Tailwind v4 + shadcn/ui (variante **Base UI** — componentes usam prop `render`, não `asChild`)
-- Supabase: projeto `ukewaugpbrorabmeptip` (sa-east-1). Auth de conta única; RLS em tudo restrito ao e-mail do dono via `auth.jwt()->>'email'`. Bucket privado `files` no Storage.
+- Supabase: projeto `ukewaugpbrorabmeptip` (sa-east-1). Auth de conta única (`hugoosan69@gmail.com`); RLS em tudo restrito ao dono pela função `public.is_owner()` — trocar o dono é alterar só essa função. Bucket privado `files` no Storage.
+- Schema versionado em `supabase/migrations/*.sql` (aplicar em ordem no SQL Editor). Manter esses arquivos em sincronia ao mudar o banco.
 - Dados: Server Components carregam o estado inicial; mutações via `supabase-js` no client com update otimista. Sem camada de API, sem react-query.
-- Sem triggers/functions no banco; `updated_at` é atualizado pela aplicação.
+- Sem triggers no banco; `updated_at` é atualizado pela aplicação. A única function é `is_owner()`, usada pelas policies.
 
 ## Estrutura
 

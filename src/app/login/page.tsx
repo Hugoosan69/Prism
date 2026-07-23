@@ -26,7 +26,15 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError("E-mail ou senha incorretos.")
+      // Mostrar sempre "senha incorreta" esconde falhas de configuração
+      // (URL/chave ausente, e-mail não confirmado) e dificulta o diagnóstico.
+      setError(
+        error.code === "invalid_credentials"
+          ? "E-mail ou senha incorretos."
+          : error.code === "email_not_confirmed"
+            ? "E-mail ainda não confirmado no Supabase."
+            : `Falha ao entrar: ${error.message}`
+      )
       setLoading(false)
       return
     }
