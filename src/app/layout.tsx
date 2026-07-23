@@ -25,10 +25,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    // As variáveis de fonte precisam ficar no <html>: é nele que o CSS base
+    // aplica font-sans. Declaradas no <body>, não resolvem e a tipografia
+    // inteira cai no fallback serifado do navegador.
+    <html
+      lang="pt-BR"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           {children}
           <Toaster position="bottom-right" />

@@ -38,6 +38,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -255,40 +256,40 @@ export function FileBrowser({
         uploadFiles(e.dataTransfer.files)
       }}
     >
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Arquivos</h1>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1"
-            onClick={createFolder}
-          >
-            <FolderPlus className="size-4" />
-            Nova pasta
-          </Button>
-          <Button
-            size="sm"
-            className="gap-1"
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {uploading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Upload className="size-4" />
-            )}
-            Enviar
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={(e) => e.target.files && uploadFiles(e.target.files)}
-          />
-        </div>
-      </div>
+      <PageHeader
+        title="Arquivos"
+        meta={`${folders.length + files.length} ${folders.length + files.length === 1 ? "item" : "itens"}`}
+      >
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={createFolder}
+        >
+          <FolderPlus className="size-4" />
+          Nova pasta
+        </Button>
+        <Button
+          size="sm"
+          className="gap-1.5"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          {uploading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Upload className="size-4" />
+          )}
+          Enviar
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(e) => e.target.files && uploadFiles(e.target.files)}
+        />
+      </PageHeader>
 
       <div className="flex flex-wrap items-center gap-3">
         <Breadcrumb>
@@ -394,10 +395,10 @@ export function FileBrowser({
                 >
                   {file.name}
                 </button>
-                <span className="text-xs text-muted-foreground">
+                <span className="font-mono text-[11px] text-muted-foreground">
                   {formatBytes(file.size)}
                 </span>
-                <span className="hidden text-xs text-muted-foreground sm:block">
+                <span className="hidden font-mono text-[11px] text-muted-foreground sm:block">
                   {format(new Date(file.created_at), "dd/MM/yyyy")}
                 </span>
                 <div className="flex opacity-0 transition-opacity group-hover:opacity-100">

@@ -2,15 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  Bookmark,
-  Database,
-  FolderOpen,
-  LayoutDashboard,
-  Settings,
-  SquareKanban,
-  StickyNote,
-} from "lucide-react"
+import { Settings } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -21,15 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-
-const items = [
-  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { title: "Kanban", href: "/kanban", icon: SquareKanban },
-  { title: "SQL", href: "/sql", icon: Database },
-  { title: "Arquivos", href: "/arquivos", icon: FolderOpen },
-  { title: "Notas", href: "/notas", icon: StickyNote },
-  { title: "Favoritos", href: "/favoritos", icon: Bookmark },
-]
+import { NAV_ITEMS } from "@/lib/navigation"
 
 export function AppSidebar() {
   const pathname = usePathname()
@@ -37,30 +21,47 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex h-10 items-center gap-2 px-2">
-          <div className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary font-mono text-xs font-bold text-primary-foreground">
-            P
+        <div className="flex h-11 items-center gap-2.5 px-2">
+          <div className="prism-spectrum flex size-6 shrink-0 items-center justify-center rounded-[7px]">
+            <span className="font-mono text-[11px] font-bold text-black/75">
+              P
+            </span>
           </div>
-          <span className="text-sm font-semibold group-data-[collapsible=icon]:hidden">
+          <span className="text-[15px] font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
             Prism
           </span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu>
-            {items.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  isActive={pathname.startsWith(item.href)}
-                  tooltip={item.title}
-                  render={<Link href={item.href} />}
-                >
-                  <item.icon />
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+          <SidebarMenu className="gap-0.5">
+            {NAV_ITEMS.map((item) => {
+              const isActive = pathname.startsWith(item.href)
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    tooltip={item.title}
+                    render={<Link href={item.href} />}
+                    className="relative gap-2.5 font-medium"
+                  >
+                    {/* A faixa do espectro marca onde você está */}
+                    <span
+                      aria-hidden
+                      className="absolute top-1/2 left-0 h-4 w-[2px] -translate-y-1/2 rounded-full transition-opacity"
+                      style={{
+                        background: item.accent,
+                        opacity: isActive ? 1 : 0,
+                      }}
+                    />
+                    <item.icon
+                      style={isActive ? { color: item.accent } : undefined}
+                    />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
@@ -71,6 +72,7 @@ export function AppSidebar() {
               isActive={pathname.startsWith("/configuracoes")}
               tooltip="Configurações"
               render={<Link href="/configuracoes" />}
+              className="gap-2.5 font-medium"
             >
               <Settings />
               <span>Configurações</span>

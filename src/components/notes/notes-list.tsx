@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Plus, Search, Star } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -34,17 +35,19 @@ export function NotesList({ notes }: { notes: NoteSummary[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Notas</h1>
+      <PageHeader
+        title="Notas"
+        meta={`${notes.length} ${notes.length === 1 ? "nota" : "notas"}`}
+      >
         <Button
           size="sm"
-          className="gap-1"
+          className="gap-1.5"
           onClick={() => router.push("/notas?new=1")}
         >
           <Plus className="size-4" />
           Nova nota
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="relative w-full max-w-xs">
         <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -81,7 +84,7 @@ export function NotesList({ notes }: { notes: NoteSummary[] }) {
               <p className="line-clamp-3 text-sm whitespace-pre-line text-muted-foreground">
                 {note.content || "Nota vazia"}
               </p>
-              <p className="text-xs text-muted-foreground/70">
+              <p className="font-mono text-[11px] text-muted-foreground/70">
                 {formatDistanceToNow(new Date(note.updated_at), {
                   addSuffix: true,
                   locale: ptBR,

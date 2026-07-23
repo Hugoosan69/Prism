@@ -9,6 +9,7 @@ import {
   File,
   StickyNote,
 } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 import {
   Card,
   CardContent,
@@ -57,7 +58,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold">Dashboard</h1>
+      <PageHeader
+        title="Dashboard"
+        meta={format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
+      />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Card>
@@ -66,7 +70,9 @@ export default async function DashboardPage() {
               <Circle className="size-4 text-muted-foreground" />
               Tarefas pendentes
             </CardTitle>
-            <span className="text-2xl font-semibold">{pending.count ?? 0}</span>
+            <span className="font-mono text-2xl font-semibold tabular-nums">
+              {pending.count ?? 0}
+            </span>
           </CardHeader>
           <CardContent className="space-y-1.5">
             {(pending.data ?? []).length === 0 ? (
@@ -100,7 +106,7 @@ export default async function DashboardPage() {
               <CheckCircle2 className="size-4 text-green-500" />
               Concluídas hoje
             </CardTitle>
-            <span className="text-2xl font-semibold">
+            <span className="font-mono text-2xl font-semibold tabular-nums">
               {doneToday.count ?? 0}
             </span>
           </CardHeader>

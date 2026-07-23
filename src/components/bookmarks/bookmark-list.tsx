@@ -4,6 +4,7 @@
 
 import { useMemo, useState } from "react"
 import { Pencil, Plus, Search } from "lucide-react"
+import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { Bookmark } from "@/lib/types"
@@ -62,11 +63,13 @@ export function BookmarkList({ initialBookmarks, openNew }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Favoritos</h1>
+      <PageHeader
+        title="Favoritos"
+        meta={`${bookmarks.length} ${bookmarks.length === 1 ? "link" : "links"}`}
+      >
         <Button
           size="sm"
-          className="gap-1"
+          className="gap-1.5"
           onClick={() => {
             setEditing(null)
             setDialogOpen(true)
@@ -75,7 +78,7 @@ export function BookmarkList({ initialBookmarks, openNew }: Props) {
           <Plus className="size-4" />
           Novo favorito
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="relative w-full max-w-xs">
         <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />

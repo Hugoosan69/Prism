@@ -12,7 +12,9 @@ export default function AppLayout({
       <AppSidebar />
       <SidebarInset>
         <Topbar />
-        <div className="flex-1 p-6">{children}</div>
+        <div className="mx-auto w-full max-w-6xl flex-1 px-6 py-7">
+          {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

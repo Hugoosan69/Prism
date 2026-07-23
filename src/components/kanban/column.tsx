@@ -27,9 +27,11 @@ export function KanbanColumn({ status, title, tasks, onTaskClick }: Props) {
         isOver && "border-primary/40 bg-muted/60"
       )}
     >
-      <div className="flex items-center justify-between px-1">
-        <span className="text-sm font-medium">{title}</span>
-        <span className="text-xs text-muted-foreground">{tasks.length}</span>
+      <div className="flex items-center justify-between px-1 pb-0.5">
+        <span className="text-[13px] font-medium">{title}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">
+          {tasks.length}
+        </span>
       </div>
       <SortableContext
         items={tasks.map((t) => t.id)}

@@ -50,8 +50,8 @@ export function TaskCard({
           {task.due_date && (
             <span
               className={cn(
-                "flex items-center gap-1 text-xs text-muted-foreground",
-                overdue && "text-red-500"
+                "flex items-center gap-1 font-mono text-[11px] text-muted-foreground",
+                overdue && "text-destructive"
               )}
             >
               <CalendarDays className="size-3" />

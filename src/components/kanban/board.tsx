@@ -16,6 +16,7 @@ import { arrayMove } from "@dnd-kit/sortable"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/layout/page-header"
 import { createClient } from "@/lib/supabase/client"
 import type { Task, TaskStatus } from "@/lib/types"
 import { TASK_STATUS_LABELS } from "@/lib/types"
@@ -172,13 +173,15 @@ export function KanbanBoard({ initialTasks, openNew, openTaskId }: Props) {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Kanban</h1>
-        <Button size="sm" onClick={openCreate} className="gap-1">
+      <PageHeader
+        title="Kanban"
+        meta={`${tasks.filter((t) => t.status !== "done").length} em aberto`}
+      >
+        <Button size="sm" onClick={openCreate} className="gap-1.5">
           <Plus className="size-4" />
           Nova tarefa
         </Button>
-      </div>
+      </PageHeader>
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}

@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PageHeader } from "@/components/layout/page-header"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import type { Snippet } from "@/lib/types"
@@ -111,13 +112,15 @@ export function SnippetLibrary({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Biblioteca SQL</h1>
-        <Button size="sm" onClick={openCreate} className="gap-1">
+      <PageHeader
+        title="Biblioteca SQL"
+        meta={`${snippets.length} ${snippets.length === 1 ? "consulta" : "consultas"}`}
+      >
+        <Button size="sm" onClick={openCreate} className="gap-1.5">
           <Plus className="size-4" />
           Nova consulta
         </Button>
-      </div>
+      </PageHeader>
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative w-full max-w-xs">
