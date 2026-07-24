@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation"
 import {
   ExternalLink,
   Folder as FolderIcon,
+  FolderInput,
   FolderPlus,
+  MoreHorizontal,
   Pencil,
   Plus,
   Search,
@@ -39,6 +41,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { PageHeader } from "@/components/layout/page-header"
 import { createClient } from "@/lib/supabase/client"
@@ -46,20 +55,29 @@ import { sourceForUrl } from "@/lib/link-source"
 import { cn } from "@/lib/utils"
 import type { Folder, LinkItem } from "@/lib/types"
 import { LinkDialog } from "./link-dialog"
+import { MoveDialog } from "./move-dialog"
 
 type Props = {
   folderId: string | null
   breadcrumb: Folder[]
   initialFolders: Folder[]
   initialLinks: LinkItem[]
+  allFolders: Folder[]
+  folderCounts: Record<string, number>
   openNew?: boolean
 }
+
+type Moving =
+  | { kind: "link"; item: LinkItem }
+  | { kind: "folder"; item: Folder }
 
 export function LinkBrowser({
   folderId,
   breadcrumb,
   initialFolders,
   initialLinks,
+  allFolders,
+  folderCounts,
   openNew,
 }: Props) {
   const router = useRouter()
@@ -71,6 +89,7 @@ export function LinkBrowser({
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(
     null
   )
+  const [moving, setMoving] = useState<Moving | null>(null)
   const [deleting, setDeleting] = useState<
     { type: "pasta" | "link"; id: string; name: string } | null
   >(null)
@@ -134,6 +153,37 @@ export function LinkBrowser({
         .sort((a, b) => a.name.localeCompare(b.name))
     )
     setRenaming(null)
+    router.refresh()
+  }
+
+  async function handleMove(destinoId: string | null) {
+    if (!moving) return
+    const supabase = createClient()
+
+    if (moving.kind === "link") {
+      const { error } = await supabase
+        .from("links")
+        .update({ folder_id: destinoId })
+        .eq("id", moving.item.id)
+      if (error) {
+        toast.error("Erro ao mover o link.")
+        return
+      }
+      setLinks((prev) => prev.filter((l) => l.id !== moving.item.id))
+      toast.success(`"${moving.item.title}" movido.`)
+    } else {
+      const { error } = await supabase
+        .from("folders")
+        .update({ parent_id: destinoId })
+        .eq("id", moving.item.id)
+      if (error) {
+        toast.error("Erro ao mover a pasta.")
+        return
+      }
+      setFolders((prev) => prev.filter((f) => f.id !== moving.item.id))
+      toast.success(`"${moving.item.name}" movida.`)
+    }
+    router.refresh()
   }
 
   async function toggleFavorite(link: LinkItem) {
@@ -173,9 +223,9 @@ export function LinkBrowser({
         return
       }
       setFolders((prev) => prev.filter((f) => f.id !== deleting.id))
-      router.refresh()
     }
     setDeleting(null)
+    router.refresh()
   }
 
   function handleSaved(saved: LinkItem, isNew: boolean) {
@@ -187,6 +237,7 @@ export function LinkBrowser({
   }
 
   const total = folders.length + links.length
+  const vazio = filteredFolders.length === 0 && filteredLinks.length === 0
 
   return (
     <div>
@@ -216,7 +267,7 @@ export function LinkBrowser({
         </Button>
       </PageHeader>
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-center gap-3">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -255,7 +306,7 @@ export function LinkBrowser({
         </div>
       </div>
 
-      {filteredFolders.length === 0 && filteredLinks.length === 0 ? (
+      {vazio ? (
         <div className="rounded-xl border border-dashed py-16 text-center">
           <p className="text-sm text-muted-foreground">
             {search
@@ -264,131 +315,226 @@ export function LinkBrowser({
           </p>
         </div>
       ) : (
-        <div className="divide-y overflow-hidden rounded-xl border">
-          {filteredFolders.map((folder) => (
-            <div
-              key={folder.id}
-              className="group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40"
-            >
-              <FolderIcon className="size-4 shrink-0 fill-muted-foreground/20 text-muted-foreground" />
-              <button
-                className="flex-1 cursor-pointer truncate text-left text-sm font-medium"
-                onClick={() => router.push(`/links?pasta=${folder.id}`)}
-              >
-                {folder.name}
-              </button>
-              <div className="flex opacity-0 transition-opacity group-hover:opacity-100">
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  title="Renomear"
-                  onClick={() =>
-                    setRenaming({ id: folder.id, name: folder.name })
-                  }
-                >
-                  <Pencil className="size-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  title="Excluir"
-                  onClick={() =>
-                    setDeleting({
-                      type: "pasta",
-                      id: folder.id,
-                      name: folder.name,
-                    })
-                  }
-                >
-                  <Trash2 className="size-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
-
-          {filteredLinks.map((link) => {
-            const source = sourceForUrl(link.url)
-            return (
-              <div
-                key={link.id}
-                className="group flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted/40"
-              >
-                <source.icon className="size-4 shrink-0 text-muted-foreground" />
-                <a
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex min-w-0 flex-1 items-baseline gap-2"
-                >
-                  <span className="truncate text-sm">{link.title}</span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {link.description || source.label}
-                  </span>
-                </a>
-                <span className="hidden shrink-0 font-mono text-[11px] text-muted-foreground sm:block">
-                  {source.label}
-                </span>
-                <div className="flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    title="Favoritar"
-                    onClick={() => toggleFavorite(link)}
-                  >
-                    <Star
-                      className={cn(
-                        "size-3.5",
-                        link.is_favorite
-                          ? "fill-amber-400 text-amber-400"
-                          : "opacity-0 transition-opacity group-hover:opacity-100"
-                      )}
-                    />
-                  </Button>
-                  <div className="flex opacity-0 transition-opacity group-hover:opacity-100">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      title="Abrir em nova aba"
-                      render={
-                        <a
-                          href={link.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+        <div className="space-y-7">
+          {/* Pastas: cartões, para separar do que é conteúdo final */}
+          {filteredFolders.length > 0 && (
+            <section className="space-y-2.5">
+              <h2 className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+                Pastas
+              </h2>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredFolders.map((folder) => {
+                  const count = folderCounts[folder.id] ?? 0
+                  return (
+                    <div
+                      key={folder.id}
+                      className="group relative flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:border-foreground/20"
+                    >
+                      <div
+                        className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+                        style={{
+                          background:
+                            "color-mix(in oklch, var(--spec-arquivos) 14%, transparent)",
+                        }}
+                      >
+                        <FolderIcon
+                          className="size-4.5"
+                          style={{ color: "var(--spec-arquivos)" }}
                         />
-                      }
-                    >
-                      <ExternalLink className="size-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      title="Editar"
-                      onClick={() => {
-                        setEditing(link)
-                        setDialogOpen(true)
-                      }}
-                    >
-                      <Pencil className="size-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      title="Excluir"
-                      onClick={() =>
-                        setDeleting({
-                          type: "link",
-                          id: link.id,
-                          name: link.title,
-                        })
-                      }
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  </div>
-                </div>
+                      </div>
+                      <button
+                        onClick={() => router.push(`/links?pasta=${folder.id}`)}
+                        className="min-w-0 flex-1 text-left"
+                      >
+                        {/* Área clicável cobre o cartão inteiro */}
+                        <span className="absolute inset-0 rounded-xl" />
+                        <span className="block truncate text-sm font-medium">
+                          {folder.name}
+                        </span>
+                        <span className="font-mono text-[11px] text-muted-foreground">
+                          {count} {count === 1 ? "item" : "itens"}
+                        </span>
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              title="Ações da pasta"
+                              className="relative opacity-0 transition-opacity group-hover:opacity-100 data-[popup-open]:opacity-100"
+                            />
+                          }
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              setRenaming({
+                                id: folder.id,
+                                name: folder.name,
+                              })
+                            }
+                          >
+                            <Pencil className="size-4" />
+                            Renomear
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              setMoving({ kind: "folder", item: folder })
+                            }
+                          >
+                            <FolderInput className="size-4" />
+                            Mover para...
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() =>
+                              setDeleting({
+                                type: "pasta",
+                                id: folder.id,
+                                name: folder.name,
+                              })
+                            }
+                          >
+                            <Trash2 className="size-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
+            </section>
+          )}
+
+          {/* Links: lista com respiro, origem à direita */}
+          {filteredLinks.length > 0 && (
+            <section className="space-y-2.5">
+              <h2 className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+                Links
+              </h2>
+              <div className="overflow-hidden rounded-xl border divide-y">
+                {filteredLinks.map((link) => {
+                  const source = sourceForUrl(link.url)
+                  return (
+                    <div
+                      key={link.id}
+                      className="group relative flex items-center gap-3 bg-card p-3.5 transition-colors hover:bg-muted/40"
+                    >
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted/70">
+                        <source.icon className="size-4.5 text-muted-foreground" />
+                      </div>
+
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="min-w-0 flex-1"
+                      >
+                        <span className="absolute inset-0" />
+                        <span className="flex items-center gap-1.5">
+                          <span className="truncate text-sm font-medium">
+                            {link.title}
+                          </span>
+                          {link.is_favorite && (
+                            <Star className="size-3 shrink-0 fill-amber-400 text-amber-400" />
+                          )}
+                        </span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {link.description || link.url}
+                        </span>
+                      </a>
+
+                      <span className="relative hidden shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:block">
+                        {source.label}
+                      </span>
+
+                      <div className="relative flex items-center">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          title={
+                            link.is_favorite
+                              ? "Remover dos favoritos"
+                              : "Favoritar"
+                          }
+                          onClick={() => toggleFavorite(link)}
+                          className={cn(
+                            "transition-opacity",
+                            !link.is_favorite &&
+                              "opacity-0 group-hover:opacity-100"
+                          )}
+                        >
+                          <Star
+                            className={cn(
+                              "size-3.5",
+                              link.is_favorite &&
+                                "fill-amber-400 text-amber-400"
+                            )}
+                          />
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                title="Ações do link"
+                                className="opacity-0 transition-opacity group-hover:opacity-100 data-[popup-open]:opacity-100"
+                              />
+                            }
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => window.open(link.url, "_blank")}
+                            >
+                              <ExternalLink className="size-4" />
+                              Abrir
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditing(link)
+                                setDialogOpen(true)
+                              }}
+                            >
+                              <Pencil className="size-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setMoving({ kind: "link", item: link })
+                              }
+                            >
+                              <FolderInput className="size-4" />
+                              Mover para...
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setDeleting({
+                                  type: "link",
+                                  id: link.id,
+                                  name: link.title,
+                                })
+                              }
+                            >
+                              <Trash2 className="size-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
         </div>
       )}
 
@@ -398,6 +544,22 @@ export function LinkBrowser({
         link={editing}
         folderId={folderId}
         onSaved={handleSaved}
+      />
+
+      <MoveDialog
+        open={Boolean(moving)}
+        onOpenChange={(o) => !o && setMoving(null)}
+        itemName={
+          moving?.kind === "link"
+            ? moving.item.title
+            : (moving?.item.name ?? "")
+        }
+        currentFolderId={folderId}
+        folders={allFolders}
+        excludeFolderId={
+          moving?.kind === "folder" ? moving.item.id : undefined
+        }
+        onMove={handleMove}
       />
 
       <Dialog
