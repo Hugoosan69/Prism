@@ -12,7 +12,7 @@ Organizador pessoal de usuário único (Hugo). Filosofia: simplicidade extrema �
 
 ## Estrutura
 
-- `src/app/(app)/*` — rotas protegidas (dashboard, kanban, sql, arquivos, notas, favoritos, configuracoes); `src/app/login` — login
+- `src/app/(app)/*` — rotas protegidas (dashboard, kanban, sql, links, notas, favoritos, configuracoes); `src/app/login` — login; `src/app/redefinir-senha` — destino do link de recuperação
 - `src/middleware.ts` — protege tudo exceto `/login`
 - `src/components/<módulo>/*` — componentes por módulo; `src/components/ui` — shadcn (não editar à mão sem necessidade)
 - `src/lib/supabase/{client,server}.ts` — clients (@supabase/ssr); `src/lib/database.types.ts` — tipos gerados (regenerar via MCP `generate_typescript_types` após mudar o schema); `src/lib/types.ts` — aliases e labels
@@ -21,7 +21,8 @@ Organizador pessoal de usuário único (Hugo). Filosofia: simplicidade extrema �
 
 - Deep links por query param: `?new=1` abre criação; `?task=<id>` / `?snippet=<id>` abrem edição; `?pasta=<id>` navega pastas
 - Pesquisa global: Ctrl+K (`search-command.tsx`), ilike em todas as tabelas
-- Uploads: bucket `files`, caminhos `tasks/<taskId>/...` e `arquivos/<folderId|raiz>/...`; download via signed URL (60s)
+- Sem upload de arquivos: o storage do Supabase é limitado, então arquivos grandes vivem no Google Drive e o módulo **Links** guarda o endereço (tabela `links`, organizada pelas pastas de `folders`). Anexos de tarefas ainda usam o bucket `files` em `tasks/<taskId>/...`, com download via signed URL (60s). A tabela `files` ficou sem uso pela aplicação.
+- Campos de texto longos: o `Textarea` do shadcn usa `field-sizing-content` e cresce sem limite; em diálogos, travar com `field-sizing-fixed h-*` e deixar o rodapé `shrink-0`, senão os botões saem da tela
 - Toasts com sonner; confirmações destrutivas com AlertDialog
 
 ## Comandos
