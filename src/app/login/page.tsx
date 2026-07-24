@@ -17,11 +17,27 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [precisaConfirmar, setPrecisaConfirmar] = useState(false)
+  const [reenviando, setReenviando] = useState(false)
 
   function switchMode(next: Mode) {
     setMode(next)
     setError(null)
     setNotice(null)
+    setPrecisaConfirmar(false)
+  }
+
+  async function reenviarConfirmacao() {
+    setReenviando(true)
+    setError(null)
+    const supabase = createClient()
+    const { error } = await supabase.auth.resend({ type: "signup", email })
+    setReenviando(false)
+    if (error) {
+      setError(`Não foi possível reenviar: ${error.message}`)
+      return
+    }
+    setNotice(`Novo link enviado para ${email}. Verifique também o spam.`)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -56,8 +72,9 @@ export default function LoginPage() {
       // Sem sessão = o Supabase está exigindo confirmação por e-mail.
       if (!data.session) {
         setNotice(
-          "Conta criada. Confirme pelo link enviado ao seu e-mail e volte para entrar."
+          `Conta criada. Enviamos um link de confirmação para ${email} — confirme e volte para entrar.`
         )
+        setPrecisaConfirmar(true)
         setMode("entrar")
         setLoading(false)
         return
@@ -76,13 +93,16 @@ export default function LoginPage() {
     if (error) {
       // Mostrar sempre "senha incorreta" esconde falhas de configuração
       // (chave inválida, e-mail não confirmado) e dificulta o diagnóstico.
-      setError(
-        error.code === "invalid_credentials"
-          ? "E-mail ou senha incorretos."
-          : error.code === "email_not_confirmed"
-            ? "Confirme seu e-mail antes de entrar."
+      if (error.code === "email_not_confirmed") {
+        setError("Confirme seu e-mail antes de entrar.")
+        setPrecisaConfirmar(true)
+      } else {
+        setError(
+          error.code === "invalid_credentials"
+            ? "E-mail ou senha incorretos."
             : `Falha ao entrar: ${error.message}`
-      )
+        )
+      }
       setLoading(false)
       return
     }
@@ -180,10 +200,20 @@ export default function LoginPage() {
               )}
             </div>
 
-            <div aria-live="polite">
+            <div aria-live="polite" className="space-y-2">
               {error && <p className="text-sm text-destructive">{error}</p>}
               {notice && (
                 <p className="text-sm text-muted-foreground">{notice}</p>
+              )}
+              {precisaConfirmar && email && (
+                <button
+                  type="button"
+                  onClick={reenviarConfirmacao}
+                  disabled={reenviando}
+                  className="text-sm font-medium underline underline-offset-4 hover:text-foreground disabled:opacity-50"
+                >
+                  {reenviando ? "Reenviando..." : "Reenviar link de confirmação"}
+                </button>
               )}
             </div>
 
