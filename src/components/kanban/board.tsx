@@ -19,12 +19,12 @@ import { Button } from "@/components/ui/button"
 import { PageHeader } from "@/components/layout/page-header"
 import { createClient } from "@/lib/supabase/client"
 import type { Task, TaskStatus } from "@/lib/types"
-import { TASK_STATUS_LABELS } from "@/lib/types"
+import { TASK_STATUS_LABELS, TASK_STATUSES } from "@/lib/types"
 import { KanbanColumn } from "./column"
 import { TaskCard } from "./task-card"
 import { TaskDialog } from "./task-dialog"
 
-const STATUSES: TaskStatus[] = ["todo", "doing", "done"]
+const STATUSES = TASK_STATUSES
 
 type Props = {
   initialTasks: Task[]
@@ -48,7 +48,12 @@ export function KanbanBoard({ initialTasks, openNew, openTaskId }: Props) {
   )
 
   const byStatus = useMemo(() => {
-    const map: Record<TaskStatus, Task[]> = { todo: [], doing: [], done: [] }
+    const map: Record<TaskStatus, Task[]> = {
+      todo: [],
+      doing: [],
+      waiting: [],
+      done: [],
+    }
     for (const task of tasks) {
       map[(task.status as TaskStatus) ?? "todo"].push(task)
     }
@@ -175,7 +180,13 @@ export function KanbanBoard({ initialTasks, openNew, openTaskId }: Props) {
     <div className="flex h-full flex-col gap-4">
       <PageHeader
         title="Kanban"
-        meta={`${tasks.filter((t) => t.status !== "done").length} em aberto`}
+        meta={[
+          `${tasks.filter((t) => t.status !== "done").length} em aberto`,
+          byStatus.waiting.length > 0 &&
+            `${byStatus.waiting.length} aguardando`,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
       >
         <Button size="sm" onClick={openCreate} className="gap-1.5">
           <Plus className="size-4" />
@@ -188,7 +199,7 @@ export function KanbanBoard({ initialTasks, openNew, openTaskId }: Props) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {STATUSES.map((status) => (
             <KanbanColumn
               key={status}

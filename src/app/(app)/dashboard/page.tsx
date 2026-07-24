@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Circle,
   Database,
+  Hourglass,
   Link2,
   StickyNote,
 } from "lucide-react"
@@ -24,13 +25,26 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const todayStart = startOfDay(new Date()).toISOString()
 
-  const [pending, doneToday, recentSnippets, recentNotes, recentLinks] =
-    await Promise.all([
+  const [
+    pending,
+    waiting,
+    doneToday,
+    recentSnippets,
+    recentNotes,
+    recentLinks,
+  ] = await Promise.all([
+      // Pendentes = o que depende de você; o que aguarda terceiros tem card próprio
       supabase
         .from("tasks")
         .select("id, title, priority, due_date", { count: "exact" })
-        .neq("status", "done")
+        .in("status", ["todo", "doing"])
         .order("due_date", { ascending: true, nullsFirst: false })
+        .limit(5),
+      supabase
+        .from("tasks")
+        .select("id, title", { count: "exact" })
+        .eq("status", "waiting")
+        .order("created_at", { ascending: true })
         .limit(5),
       supabase
         .from("tasks")
@@ -94,6 +108,38 @@ export default async function DashboardPage() {
                       })}
                     </span>
                   )}
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <Hourglass
+                className="size-4"
+                style={{ color: "var(--status-waiting)" }}
+              />
+              Aguardando retorno
+            </CardTitle>
+            <span className="font-mono text-2xl font-semibold tabular-nums">
+              {waiting.count ?? 0}
+            </span>
+          </CardHeader>
+          <CardContent className="space-y-1.5">
+            {(waiting.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nada esperando validação.
+              </p>
+            ) : (
+              (waiting.data ?? []).map((task) => (
+                <Link
+                  key={task.id}
+                  href={`/kanban?task=${task.id}`}
+                  className="block truncate text-sm hover:underline"
+                >
+                  {task.title}
                 </Link>
               ))
             )}

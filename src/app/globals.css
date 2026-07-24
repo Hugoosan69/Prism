@@ -68,9 +68,21 @@
   --color-spec-arquivos: var(--spec-arquivos);
   --color-spec-notas: var(--spec-notas);
   --color-spec-favoritos: var(--spec-favoritos);
+  --color-status-todo: var(--status-todo);
+  --color-status-doing: var(--status-doing);
+  --color-status-waiting: var(--status-waiting);
+  --color-status-done: var(--status-done);
 }
 
+/* Estágios do Kanban. A saturação cai conforme a tarefa sai do seu radar:
+   vermelho pede ação, âmbar está em curso, azul aguarda alguém, e o azul
+   apagado do concluído já não disputa atenção. */
 :root {
+  --status-todo: oklch(0.6 0.19 25);
+  --status-doing: oklch(0.68 0.15 72);
+  --status-waiting: oklch(0.6 0.15 245);
+  --status-done: oklch(0.6 0.05 255);
+
   --spec-dashboard: oklch(0.68 0.09 250);
   --spec-kanban: oklch(0.7 0.12 62);
   --spec-sql: oklch(0.66 0.1 205);
@@ -113,6 +125,11 @@
 }
 
 .dark {
+  --status-todo: oklch(0.68 0.18 25);
+  --status-doing: oklch(0.76 0.14 72);
+  --status-waiting: oklch(0.68 0.14 245);
+  --status-done: oklch(0.64 0.045 255);
+
   --spec-dashboard: oklch(0.72 0.1 250);
   --spec-kanban: oklch(0.78 0.13 65);
   --spec-sql: oklch(0.74 0.11 200);
