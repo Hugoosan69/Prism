@@ -16,8 +16,8 @@ npm run dev
 Requer `.env.local` com:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://ukewaugpbrorabmeptip.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<chave publishable do projeto>
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
 ## Setup do Supabase (feito uma única vez)
