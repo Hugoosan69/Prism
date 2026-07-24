@@ -23,6 +23,7 @@ Organizador pessoal de usuário único (Hugo). Filosofia: simplicidade extrema �
 - Pesquisa global: Ctrl+K (`search-command.tsx`), ilike em todas as tabelas
 - Sem upload de arquivos: o storage do Supabase é limitado, então arquivos grandes vivem no Google Drive e o módulo **Links** guarda o endereço (tabela `links`, organizada pelas pastas de `folders`). Anexos de tarefas ainda usam o bucket `files` em `tasks/<taskId>/...`, com download via signed URL (60s). A tabela `files` ficou sem uso pela aplicação.
 - Campos de texto longos: o `Textarea` do shadcn usa `field-sizing-content` e cresce sem limite; em diálogos, travar com `field-sizing-fixed h-*` e deixar o rodapé `shrink-0`, senão os botões saem da tela
+- Notas guardam Markdown puro; a barra de formatação (`editor-toolbar.tsx`) só manipula texto via `lib/markdown-format.ts` — alterar marcação ali, não no componente
 - Toasts com sonner; confirmações destrutivas com AlertDialog
 
 ## Comandos
