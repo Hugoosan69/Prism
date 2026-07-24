@@ -20,6 +20,7 @@ Organizador pessoal de usuário único (Hugo). Filosofia: simplicidade extrema �
 ## Convenções
 
 - Deep links por query param: `?new=1` abre criação; `?task=<id>` / `?snippet=<id>` abrem edição; `?pasta=<id>` navega pastas
+- Kanban tem 4 estágios (`todo`/`doing`/`waiting`/`done`) definidos em `lib/types.ts` — adicionar um exige alterar o check constraint de `tasks.status` junto. Só `done` grava `completed_at`
 - Pesquisa global: Ctrl+K (`search-command.tsx`), ilike em todas as tabelas
 - Sem upload de arquivos: o storage do Supabase é limitado, então arquivos grandes vivem no Google Drive e o módulo **Links** guarda o endereço (tabela `links`, organizada pelas pastas de `folders`). Anexos de tarefas ainda usam o bucket `files` em `tasks/<taskId>/...`, com download via signed URL (60s). A tabela `files` ficou sem uso pela aplicação.
 - Campos de texto longos: o `Textarea` do shadcn usa `field-sizing-content` e cresce sem limite; em diálogos, travar com `field-sizing-fixed h-*` e deixar o rodapé `shrink-0`, senão os botões saem da tela
