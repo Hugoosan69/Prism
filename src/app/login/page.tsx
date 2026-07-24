@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NAV_ITEMS } from "@/lib/navigation"
 
-type Mode = "entrar" | "criar"
+type Mode = "entrar" | "recuperar"
 
 /* O login é também o índice da ferramenta: cada módulo com sua faixa
    do espectro, o mesmo vocabulário da navegação interna. */
@@ -31,27 +31,11 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [precisaConfirmar, setPrecisaConfirmar] = useState(false)
-  const [reenviando, setReenviando] = useState(false)
 
   function switchMode(next: Mode) {
     setMode(next)
     setError(null)
     setNotice(null)
-    setPrecisaConfirmar(false)
-  }
-
-  async function reenviarConfirmacao() {
-    setReenviando(true)
-    setError(null)
-    const supabase = createClient()
-    const { error } = await supabase.auth.resend({ type: "signup", email })
-    setReenviando(false)
-    if (error) {
-      setError(`Não foi possível reenviar: ${error.message}`)
-      return
-    }
-    setNotice(`Novo link enviado para ${email}. Verifique também o spam.`)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -62,40 +46,22 @@ export default function LoginPage() {
 
     const supabase = createClient()
 
-    if (mode === "criar") {
-      if (password.length < 8) {
-        setError("A senha precisa de pelo menos 8 caracteres.")
-        setLoading(false)
-        return
-      }
-
-      const { data, error } = await supabase.auth.signUp({ email, password })
-
+    if (mode === "recuperar") {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/redefinir-senha`,
+      })
+      setLoading(false)
       if (error) {
         setError(
-          error.code === "user_already_exists"
-            ? "Essa conta já existe. Use “Entrar”."
-            : error.code === "signup_disabled"
-              ? "Cadastro desabilitado no Supabase. Habilite em Authentication → Sign In / Up."
-              : `Não foi possível criar a conta: ${error.message}`
+          error.code === "over_email_send_rate_limit"
+            ? "Muitos pedidos seguidos. Aguarde alguns minutos e tente de novo."
+            : `Não foi possível enviar: ${error.message}`
         )
-        setLoading(false)
         return
       }
-
-      // Sem sessão = o Supabase está exigindo confirmação por e-mail.
-      if (!data.session) {
-        setNotice(
-          `Conta criada. Enviamos um link de confirmação para ${email} — confirme e volte para entrar.`
-        )
-        setPrecisaConfirmar(true)
-        setMode("entrar")
-        setLoading(false)
-        return
-      }
-
-      router.push("/dashboard")
-      router.refresh()
+      setNotice(
+        `Se existir uma conta para ${email}, o link de recuperação chega em instantes. Verifique também o spam.`
+      )
       return
     }
 
@@ -107,16 +73,13 @@ export default function LoginPage() {
     if (error) {
       // Mostrar sempre "senha incorreta" esconde falhas de configuração
       // (chave inválida, e-mail não confirmado) e dificulta o diagnóstico.
-      if (error.code === "email_not_confirmed") {
-        setError("Confirme seu e-mail antes de entrar.")
-        setPrecisaConfirmar(true)
-      } else {
-        setError(
-          error.code === "invalid_credentials"
-            ? "E-mail ou senha incorretos."
+      setError(
+        error.code === "invalid_credentials"
+          ? "E-mail ou senha incorretos."
+          : error.code === "email_not_confirmed"
+            ? "Confirme seu e-mail antes de entrar."
             : `Falha ao entrar: ${error.message}`
-        )
-      }
+      )
       setLoading(false)
       return
     }
@@ -193,38 +156,17 @@ export default function LoginPage() {
           </div>
 
           <div className="rounded-2xl border bg-card p-7 shadow-sm">
-            <div
-              role="tablist"
-              aria-label="Modo de acesso"
-              className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-muted/60 p-1"
-            >
-              {(["entrar", "criar"] as const).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  role="tab"
-                  id={`tab-${value}`}
-                  aria-selected={mode === value}
-                  aria-controls="form-acesso"
-                  onClick={() => switchMode(value)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-                    mode === value
-                      ? "bg-background text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {value === "entrar" ? "Entrar" : "Criar conta"}
-                </button>
-              ))}
-            </div>
+            {mode === "recuperar" && (
+              <div className="mb-6 space-y-1">
+                <h2 className="text-base font-semibold">Recuperar senha</h2>
+                <p className="text-sm text-muted-foreground">
+                  Informe seu e-mail e enviaremos um link para definir uma
+                  nova senha.
+                </p>
+              </div>
+            )}
 
-            <form
-              id="form-acesso"
-              role="tabpanel"
-              aria-labelledby={`tab-${mode}`}
-              onSubmit={handleSubmit}
-              className="space-y-5"
-            >
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
@@ -243,46 +185,51 @@ export default function LoginPage() {
                   autoFocus
                 />
               </div>
-              <div className="space-y-2">
-                <Label
-                  htmlFor="password"
-                  className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase"
-                >
-                  Senha
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete={
-                      mode === "criar" ? "new-password" : "current-password"
-                    }
-                    className="h-10 pr-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={
-                      showPassword ? "Ocultar senha" : "Mostrar senha"
-                    }
-                    className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
-                  </button>
+
+              {mode === "entrar" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      htmlFor="password"
+                      className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase"
+                    >
+                      Senha
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => switchMode("recuperar")}
+                      className="text-xs text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                      Esqueceu a senha?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      className="h-10 pr-10"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={
+                        showPassword ? "Ocultar senha" : "Mostrar senha"
+                      }
+                      className="absolute top-1/2 right-2.5 -translate-y-1/2 rounded p-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-                {mode === "criar" && (
-                  <p className="text-xs text-muted-foreground">
-                    Mínimo de 8 caracteres.
-                  </p>
-                )}
-              </div>
+              )}
 
               <div aria-live="polite" className="space-y-2 empty:hidden">
                 {error && (
@@ -295,29 +242,28 @@ export default function LoginPage() {
                     {notice}
                   </p>
                 )}
-                {precisaConfirmar && email && (
-                  <button
-                    type="button"
-                    onClick={reenviarConfirmacao}
-                    disabled={reenviando}
-                    className="text-sm font-medium underline underline-offset-4 hover:text-foreground disabled:opacity-50"
-                  >
-                    {reenviando
-                      ? "Reenviando..."
-                      : "Reenviar link de confirmação"}
-                  </button>
-                )}
               </div>
 
               <Button type="submit" className="h-10 w-full" disabled={loading}>
                 {loading
-                  ? mode === "criar"
-                    ? "Criando..."
+                  ? mode === "recuperar"
+                    ? "Enviando..."
                     : "Entrando..."
-                  : mode === "criar"
-                    ? "Criar conta"
+                  : mode === "recuperar"
+                    ? "Enviar link de recuperação"
                     : "Entrar"}
               </Button>
+
+              {mode === "recuperar" && (
+                <button
+                  type="button"
+                  onClick={() => switchMode("entrar")}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                  <ArrowLeft className="size-3.5" />
+                  Voltar para entrar
+                </button>
+              )}
             </form>
           </div>
 

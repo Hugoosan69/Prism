@@ -4,6 +4,9 @@ import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/config"
 
 export async function middleware(request: NextRequest) {
   const isLogin = request.nextUrl.pathname.startsWith("/login")
+  // O link de recuperação chega sem sessão; a troca do código acontece na
+  // própria página. Redirecionar aqui mataria o fluxo.
+  const isRecovery = request.nextUrl.pathname.startsWith("/redefinir-senha")
 
   let supabaseResponse = NextResponse.next({ request })
 
@@ -29,7 +32,7 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    if (!user && !isLogin) {
+    if (!user && !isLogin && !isRecovery) {
       const url = request.nextUrl.clone()
       url.pathname = "/login"
       return NextResponse.redirect(url)
@@ -47,7 +50,7 @@ export async function middleware(request: NextRequest) {
     // (MIDDLEWARE_INVOCATION_FAILED) e nem a tela de login abre. Negar acesso
     // e mandar para /login mantém a proteção e deixa o erro visível lá.
     console.error("[Prism] middleware falhou ao verificar a sessão:", error)
-    if (isLogin) return supabaseResponse
+    if (isLogin || isRecovery) return supabaseResponse
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     return NextResponse.redirect(url)
