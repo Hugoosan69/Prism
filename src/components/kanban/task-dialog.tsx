@@ -208,11 +208,11 @@ export function TaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90svh] flex-col sm:max-w-lg">
+        <DialogHeader className="shrink-0">
           <DialogTitle>{task ? "Editar tarefa" : "Nova tarefa"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="-mr-1 flex-1 space-y-4 overflow-y-auto pr-1">
           <div className="space-y-2">
             <Label htmlFor="task-title">Título</Label>
             <Input
@@ -228,7 +228,7 @@ export function TaskDialog({
               id="task-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows={3}
+              className="field-sizing-fixed h-24 resize-y overflow-auto"
             />
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -346,7 +346,7 @@ export function TaskDialog({
             </div>
           )}
         </div>
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex shrink-0 items-center justify-between border-t pt-4">
           {task ? (
             <AlertDialog>
               <AlertDialogTrigger

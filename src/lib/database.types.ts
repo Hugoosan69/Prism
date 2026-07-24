@@ -146,6 +146,47 @@ export type Database = {
           },
         ]
       }
+      links: {
+        Row: {
+          created_at: string
+          description: string
+          folder_id: string | null
+          id: string
+          is_favorite: boolean
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          folder_id?: string | null
+          id?: string
+          is_favorite?: boolean
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          folder_id?: string | null
+          id?: string
+          is_favorite?: boolean
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "links_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           content: string
@@ -256,7 +297,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_owner: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation"
 import {
   Bookmark,
   Database,
+  Link2,
   Plus,
   SquareKanban,
   StickyNote,
-  Upload,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,7 +22,7 @@ const options = [
   { label: "Consulta SQL", href: "/sql?new=1", icon: Database },
   { label: "Nota", href: "/notas?new=1", icon: StickyNote },
   { label: "Favorito", href: "/favoritos?new=1", icon: Bookmark },
-  { label: "Arquivo", href: "/arquivos?upload=1", icon: Upload },
+  { label: "Link", href: "/links?new=1", icon: Link2 },
 ]
 
 export function NewItemMenu() {

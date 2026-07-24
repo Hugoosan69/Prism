@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Settings } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { LogOut, Settings } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +18,14 @@ import { NAV_ITEMS } from "@/lib/navigation"
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push("/login")
+    router.refresh()
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -76,6 +85,16 @@ export function AppSidebar() {
             >
               <Settings />
               <span>Configurações</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              tooltip="Sair do Prism"
+              onClick={handleLogout}
+              className="gap-2.5 font-medium text-muted-foreground hover:text-destructive"
+            >
+              <LogOut />
+              <span>Sair</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

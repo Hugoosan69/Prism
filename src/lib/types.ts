@@ -5,7 +5,7 @@ export type Attachment = Tables<"attachments">
 export type Snippet = Tables<"snippets">
 export type Note = Tables<"notes">
 export type Folder = Tables<"folders">
-export type FileItem = Tables<"files">
+export type LinkItem = Tables<"links">
 export type Bookmark = Tables<"bookmarks">
 
 export type TaskStatus = "todo" | "doing" | "done"

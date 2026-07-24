@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import {
   Bookmark,
   Database,
-  File,
+  Link2,
   SquareKanban,
   StickyNote,
 } from "lucide-react"
@@ -61,7 +61,7 @@ export function SearchCommand({ open, onOpenChange }: Props) {
       const supabase = createClient()
       const like = `%${term}%`
 
-      const [tasks, snippets, notes, files, bookmarks] = await Promise.all([
+      const [tasks, snippets, notes, links, bookmarks] = await Promise.all([
         supabase
           .from("tasks")
           .select("id, title, status")
@@ -78,9 +78,9 @@ export function SearchCommand({ open, onOpenChange }: Props) {
           .or(`title.ilike.${like},content.ilike.${like}`)
           .limit(5),
         supabase
-          .from("files")
-          .select("id, name, folder_id")
-          .ilike("name", like)
+          .from("links")
+          .select("id, title, url, folder_id")
+          .or(`title.ilike.${like},url.ilike.${like},description.ilike.${like}`)
           .limit(5),
         supabase
           .from("bookmarks")
@@ -111,15 +111,13 @@ export function SearchCommand({ open, onOpenChange }: Props) {
           group: "Notas",
           action: () => router.push(`/notas/${n.id}`),
         })),
-        ...(files.data ?? []).map((f) => ({
-          id: `file-${f.id}`,
-          label: f.name,
-          hint: "Arquivo",
-          group: "Arquivos",
-          action: () =>
-            router.push(
-              f.folder_id ? `/arquivos?pasta=${f.folder_id}` : "/arquivos"
-            ),
+        ...(links.data ?? []).map((l) => ({
+          id: `link-${l.id}`,
+          label: l.title,
+          hint: l.url,
+          group: "Links",
+          // Abre o destino direto: o link existe para ser seguido
+          action: () => window.open(l.url, "_blank"),
         })),
         ...(bookmarks.data ?? []).map((b) => ({
           id: `bookmark-${b.id}`,
@@ -154,7 +152,7 @@ export function SearchCommand({ open, onOpenChange }: Props) {
     Tarefas: SquareKanban,
     SQL: Database,
     Notas: StickyNote,
-    Arquivos: File,
+    Links: Link2,
     Favoritos: Bookmark,
   }
 
@@ -167,7 +165,7 @@ export function SearchCommand({ open, onOpenChange }: Props) {
     >
       <Command shouldFilter={false}>
       <CommandInput
-        placeholder="Pesquisar tarefas, SQL, notas, arquivos, favoritos..."
+        placeholder="Pesquisar tarefas, SQL, notas, links, favoritos..."
         value={query}
         onValueChange={handleQueryChange}
       />

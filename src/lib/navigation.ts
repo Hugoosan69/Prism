@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+
 export type NavItem = {
   title: string
   href: string
@@ -31,8 +32,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   { title: "SQL", href: "/sql", icon: Database, accent: "var(--spec-sql)" },
   {
-    title: "Arquivos",
-    href: "/arquivos",
+    title: "Links",
+    href: "/links",
     icon: FolderOpen,
     accent: "var(--spec-arquivos)",
   },

@@ -6,7 +6,7 @@ import {
   CheckCircle2,
   Circle,
   Database,
-  File,
+  Link2,
   StickyNote,
 } from "lucide-react"
 import { PageHeader } from "@/components/layout/page-header"
@@ -24,7 +24,7 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const todayStart = startOfDay(new Date()).toISOString()
 
-  const [pending, doneToday, recentSnippets, recentNotes, recentFiles] =
+  const [pending, doneToday, recentSnippets, recentNotes, recentLinks] =
     await Promise.all([
       supabase
         .from("tasks")
@@ -50,8 +50,8 @@ export default async function DashboardPage() {
         .order("updated_at", { ascending: false })
         .limit(5),
       supabase
-        .from("files")
-        .select("id, name, folder_id, created_at")
+        .from("links")
+        .select("id, title, url, created_at")
         .order("created_at", { ascending: false })
         .limit(5),
     ])
@@ -195,31 +195,29 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <File className="size-4 text-muted-foreground" />
-              Arquivos recentes
+              <Link2 className="size-4 text-muted-foreground" />
+              Links recentes
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5">
-            {(recentFiles.data ?? []).length === 0 ? (
+            {(recentLinks.data ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhum arquivo ainda.
+                Nenhum link salvo ainda.
               </p>
             ) : (
-              (recentFiles.data ?? []).map((file) => (
-                <Link
-                  key={file.id}
-                  href={
-                    file.folder_id
-                      ? `/arquivos?pasta=${file.folder_id}`
-                      : "/arquivos"
-                  }
+              (recentLinks.data ?? []).map((link) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex items-center justify-between gap-2 text-sm hover:underline"
                 >
-                  <span className="truncate">{file.name}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {format(new Date(file.created_at), "dd/MM")}
+                  <span className="truncate">{link.title}</span>
+                  <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+                    {format(new Date(link.created_at), "dd/MM")}
                   </span>
-                </Link>
+                </a>
               ))
             )}
           </CardContent>
