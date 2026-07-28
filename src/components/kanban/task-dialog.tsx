@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Download, Loader2, Paperclip, Trash2, X } from "lucide-react"
+import { Download, Loader2, Paperclip, Star, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
-import { formatBytes } from "@/lib/utils"
+import { cn, formatBytes } from "@/lib/utils"
 import type { Attachment, Task, TaskPriority, TaskStatus } from "@/lib/types"
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from "@/lib/types"
 
@@ -59,6 +59,7 @@ export function TaskDialog({
   const [priority, setPriority] = useState<TaskPriority>("medium")
   const [dueDate, setDueDate] = useState("")
   const [tags, setTags] = useState("")
+  const [highlighted, setHighlighted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [uploading, setUploading] = useState(false)
@@ -72,6 +73,7 @@ export function TaskDialog({
     setPriority((task?.priority as TaskPriority) ?? "medium")
     setDueDate(task?.due_date ?? "")
     setTags(task?.tags.join(", ") ?? "")
+    setHighlighted(task?.highlighted ?? false)
     setAttachments([])
     if (task) {
       const supabase = createClient()
@@ -102,6 +104,7 @@ export function TaskDialog({
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean),
+      highlighted,
       completed_at:
         status === "done"
           ? (task?.completed_at ?? new Date().toISOString())
@@ -289,6 +292,33 @@ export function TaskDialog({
               placeholder="trabalho, urgente"
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() => setHighlighted((v) => !v)}
+            aria-pressed={highlighted}
+            className={cn(
+              "flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+              highlighted
+                ? "border-amber-400/50 bg-amber-400/10"
+                : "hover:bg-muted/50"
+            )}
+          >
+            <Star
+              className={cn(
+                "size-4 shrink-0",
+                highlighted
+                  ? "fill-amber-400 text-amber-400"
+                  : "text-muted-foreground"
+              )}
+            />
+            <span className="flex-1">
+              <span className="block font-medium">Destacar</span>
+              <span className="block text-xs text-muted-foreground">
+                Chama atenção no quadro sem mudar a ordem
+              </span>
+            </span>
+          </button>
 
           {task && (
             <div className="space-y-2">

@@ -176,6 +176,28 @@ export function KanbanBoard({ initialTasks, openNew, openTaskId }: Props) {
     setTasks((prev) => prev.filter((t) => t.id !== id))
   }
 
+  function handleToggleHighlight(task: Task) {
+    const next = !task.highlighted
+    setTasks((prev) =>
+      prev.map((t) => (t.id === task.id ? { ...t, highlighted: next } : t))
+    )
+    const supabase = createClient()
+    supabase
+      .from("tasks")
+      .update({ highlighted: next })
+      .eq("id", task.id)
+      .then(({ error }) => {
+        if (error) {
+          toast.error("Erro ao destacar a tarefa.")
+          setTasks((prev) =>
+            prev.map((t) =>
+              t.id === task.id ? { ...t, highlighted: task.highlighted } : t
+            )
+          )
+        }
+      })
+  }
+
   return (
     <div className="flex h-full flex-col gap-4">
       <PageHeader
@@ -207,6 +229,7 @@ export function KanbanBoard({ initialTasks, openNew, openTaskId }: Props) {
               title={TASK_STATUS_LABELS[status]}
               tasks={byStatus[status]}
               onTaskClick={openEdit}
+              onToggleHighlight={handleToggleHighlight}
             />
           ))}
         </div>

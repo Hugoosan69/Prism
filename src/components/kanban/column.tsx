@@ -15,9 +15,16 @@ type Props = {
   title: string
   tasks: Task[]
   onTaskClick: (task: Task) => void
+  onToggleHighlight: (task: Task) => void
 }
 
-export function KanbanColumn({ status, title, tasks, onTaskClick }: Props) {
+export function KanbanColumn({
+  status,
+  title,
+  tasks,
+  onTaskClick,
+  onToggleHighlight,
+}: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
   const color = TASK_STATUS_COLORS[status]
   const hint = TASK_STATUS_HINTS[status]
@@ -52,11 +59,14 @@ export function KanbanColumn({ status, title, tasks, onTaskClick }: Props) {
         strategy={verticalListSortingStrategy}
       >
         <div className="flex min-h-24 flex-1 flex-col gap-2 px-3 pb-3">
-          {tasks.map((task) => (
+          {tasks.map((task, index) => (
             <SortableTaskCard
               key={task.id}
               task={task}
+              // Só as colunas ativas mostram a ordem de urgência
+              rank={status === "done" ? undefined : index + 1}
               onClick={() => onTaskClick(task)}
+              onToggleHighlight={() => onToggleHighlight(task)}
             />
           ))}
         </div>

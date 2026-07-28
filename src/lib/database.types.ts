@@ -259,6 +259,7 @@ export type Database = {
           created_at: string
           description: string
           due_date: string | null
+          highlighted: boolean
           id: string
           position: number
           priority: string
@@ -271,6 +272,7 @@ export type Database = {
           created_at?: string
           description?: string
           due_date?: string | null
+          highlighted?: boolean
           id?: string
           position?: number
           priority?: string
@@ -283,6 +285,7 @@ export type Database = {
           created_at?: string
           description?: string
           due_date?: string | null
+          highlighted?: boolean
           id?: string
           position?: number
           priority?: string
