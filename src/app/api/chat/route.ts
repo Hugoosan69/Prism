@@ -11,7 +11,7 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createClientFromToken } from "@/lib/supabase/server"
 import { LIMITE_HISTORICO, MAX_TOOL_ROUNDS } from "@/lib/ai/config"
 import { carregarSettings } from "@/lib/ai/settings"
 import { montarPrompt } from "@/lib/ai/prompt"
@@ -44,7 +44,10 @@ type Incoming = {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
+  // O navegador manda cookie; o app Android manda Bearer. A checagem de sessão
+  // e o RLS são os mesmos nos dois casos — muda só onde a credencial vem.
+  const bearer = request.headers.get("authorization")?.match(/^Bearer (.+)$/)?.[1]
+  const supabase = bearer ? createClientFromToken(bearer) : await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
