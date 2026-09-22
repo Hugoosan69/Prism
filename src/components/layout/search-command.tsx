@@ -6,6 +6,7 @@ import {
   Bookmark,
   Database,
   Link2,
+  MessageSquare,
   SquareKanban,
   StickyNote,
 } from "lucide-react"
@@ -61,7 +62,7 @@ export function SearchCommand({ open, onOpenChange }: Props) {
       const supabase = createClient()
       const like = `%${term}%`
 
-      const [tasks, snippets, notes, links, bookmarks] = await Promise.all([
+      const [tasks, snippets, notes, links, bookmarks, chat] = await Promise.all([
         supabase
           .from("tasks")
           .select("id, title, status")
@@ -86,6 +87,12 @@ export function SearchCommand({ open, onOpenChange }: Props) {
           .from("bookmarks")
           .select("id, title, url")
           .or(`title.ilike.${like},url.ilike.${like},description.ilike.${like}`)
+          .limit(5),
+        // A conversa também é conhecimento: acha-se pelo que foi dito nela.
+        supabase
+          .from("chat_messages")
+          .select("id, content, thread_id")
+          .ilike("content", like)
           .limit(5),
       ])
 
@@ -126,6 +133,13 @@ export function SearchCommand({ open, onOpenChange }: Props) {
           group: "Favoritos",
           action: () => window.open(b.url, "_blank"),
         })),
+        ...(chat.data ?? []).map((c) => ({
+          id: `chat-${c.id}`,
+          label: c.content.slice(0, 80) || "Mensagem",
+          hint: "Conversa",
+          group: "Chat",
+          action: () => router.push(`/chat?thread=${c.thread_id}`),
+        })),
       ]
 
       setResults(found)
@@ -154,6 +168,7 @@ export function SearchCommand({ open, onOpenChange }: Props) {
     Notas: StickyNote,
     Links: Link2,
     Favoritos: Bookmark,
+    Chat: MessageSquare,
   }
 
   return (

@@ -1,6 +1,7 @@
 import {
   Bookmark,
   Database,
+  MessageSquare,
   FolderOpen,
   LayoutDashboard,
   SquareKanban,
@@ -18,6 +19,12 @@ export type NavItem = {
 }
 
 export const NAV_ITEMS: NavItem[] = [
+  {
+    title: "Chat",
+    href: "/chat",
+    icon: MessageSquare,
+    accent: "var(--spec-chat)",
+  },
   {
     title: "Dashboard",
     href: "/dashboard",

@@ -79,6 +79,68 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          reasoning: string
+          role: string
+          thread_id: string
+          tool_call_id: string | null
+          tool_calls: Json | null
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          reasoning?: string
+          role: string
+          thread_id: string
+          tool_call_id?: string | null
+          tool_calls?: Json | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          reasoning?: string
+          role?: string
+          thread_id?: string
+          tool_call_id?: string | null
+          tool_calls?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       files: {
         Row: {
           created_at: string

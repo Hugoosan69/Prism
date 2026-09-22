@@ -7,6 +7,8 @@ export type Note = Tables<"notes">
 export type Folder = Tables<"folders">
 export type LinkItem = Tables<"links">
 export type Bookmark = Tables<"bookmarks">
+export type ChatThread = Tables<"chat_threads">
+export type ChatMessageRow = Tables<"chat_messages">
 
 export type TaskStatus = "todo" | "doing" | "waiting" | "done"
 export type TaskPriority = "low" | "medium" | "high"

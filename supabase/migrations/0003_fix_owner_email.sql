@@ -1,5 +1,8 @@
 -- Corrige o e-mail do dono e centraliza a regra.
 --
+-- ATENÇÃO: repositório público — trocar dono@exemplo.com pelo e-mail real da
+-- conta ao aplicar. É o único lugar onde ele aparece.
+--
 -- O e-mail estava repetido em 11 políticas (7 tabelas + 4 do storage) e havia
 -- sido escrito errado. Passando por uma função, trocar o dono vira uma
 -- alteração de uma linha só, e o erro não pode voltar por divergência entre
@@ -11,7 +14,7 @@ language sql
 stable
 set search_path = ''
 as $$
-  select (auth.jwt()->>'email') = 'hugoosan69@gmail.com'
+  select (auth.jwt()->>'email') = 'dono@exemplo.com'
 $$;
 
 -- Tabelas

@@ -12,8 +12,8 @@
  * problema e derruba login e middleware ao mesmo tempo.
  */
 
-const DEFAULT_URL = "https://ukewaugpbrorabmeptip.supabase.co"
-const DEFAULT_KEY = "sb_publishable_OeNJwCKAzy2Dbb0pDZe0bA_FLNeYQYj"
+const DEFAULT_URL = "https://asdjbedpqowzdppboxyy.supabase.co"
+const DEFAULT_KEY = "sb_publishable_-HHHeglSbJkf2qSzLltnLA_woa7wDyk"
 
 /** Formato novo (sb_publishable_) ou chave legada em JWT (ey...) */
 function keyLooksValid(key: string) {
