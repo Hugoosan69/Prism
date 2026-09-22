@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { NAV_ITEMS } from "@/lib/navigation"
+import { PrismMark } from "@/components/brand/prism-mark"
 
 export function AppSidebar() {
   const pathname = usePathname()
@@ -31,11 +32,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex h-11 items-center gap-2.5 px-2">
-          <div className="prism-spectrum flex size-6 shrink-0 items-center justify-center rounded-[7px]">
-            <span className="font-mono text-[11px] font-bold text-black/75">
-              P
-            </span>
-          </div>
+          <PrismMark className="size-6 shrink-0" />
           <span className="text-[15px] font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
             Prism
           </span>

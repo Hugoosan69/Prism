@@ -10,6 +10,7 @@
 
 import { useEffect, useState } from "react"
 import { Database, Sparkles, StickyNote, Search } from "lucide-react"
+import { PrismMark } from "@/components/brand/prism-mark"
 
 const ATALHOS = [
   {
@@ -52,11 +53,7 @@ export function WelcomeScreen({
     <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-4 py-8">
       <div className="w-full max-w-2xl">
         <div className="mb-7 flex items-center justify-center gap-2.5">
-          <span
-            aria-hidden
-            className="prism-spectrum size-6 rounded-md"
-            style={{ opacity: 0.9 }}
-          />
+          <PrismMark className="size-7" />
           <h1 className="text-2xl font-medium tracking-tight">
             {/* Sem a hora ainda, mostra só o nome: evita piscar a saudação errada. */}
             {hora === null ? "Olá, Hugo" : `${saudacao(hora)}, Hugo`}

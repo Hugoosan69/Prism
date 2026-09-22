@@ -254,13 +254,16 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          kind: string
           subject: string
+          subject_key: string | null
           updated_at: string
         }
         Insert: {
           content: string
           created_at?: string
           id?: string
+          kind?: string
           subject: string
           updated_at?: string
         }
@@ -268,6 +271,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          kind?: string
           subject?: string
           updated_at?: string
         }

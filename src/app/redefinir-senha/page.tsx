@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { PrismMark } from "@/components/brand/prism-mark"
 
 type Status = "verificando" | "pronto" | "invalido"
 
@@ -98,9 +99,7 @@ export default function RedefinirSenhaPage() {
     <div className="flex min-h-svh items-center justify-center px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center gap-3">
-          <div className="prism-spectrum flex size-9 items-center justify-center rounded-[10px]">
-            <span className="font-mono text-sm font-bold text-black/75">P</span>
-          </div>
+          <PrismMark className="size-9" />
           <div>
             <h1 className="text-lg leading-tight font-semibold tracking-tight">
               Prism

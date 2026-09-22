@@ -42,6 +42,7 @@ const META: Record<
   propor_snippet: { titulo: "Nova consulta", destino: "SQL", icone: Database },
   propor_link: { titulo: "Novo link", destino: "Links", icone: Link2 },
   propor_memoria: { titulo: "Guardar na memória", destino: "vale em toda conversa", icone: Brain },
+  // propor_memoria com tipo "jeito" troca o rótulo em tempo de render, abaixo.
 }
 
 function str(value: unknown): string {
@@ -63,6 +64,13 @@ export function ProposalCard({
     icone: Database,
   }
   const Icone = meta.icone
+  // Guardar um jeito muda o assistente, não o acervo: vale dizer isso no card,
+  // senão as duas coisas parecem a mesma e Hugo confirma sem perceber a
+  // diferença.
+  const rotulo =
+    tool === "propor_memoria" && str(args.tipo) === "jeito"
+      ? { titulo: "Ajustar seu jeito", destino: "muda como o assistente responde" }
+      : meta
 
   async function accept() {
     setSaving(true)
@@ -95,15 +103,19 @@ export function ProposalCard({
         })
         error = res.error
       } else if (tool === "propor_memoria") {
-        // onConflict no assunto: ensinar de novo sobre o mesmo tema corrige o
-        // que estava lá, em vez de deixar duas versões brigando no prompt.
+        // onConflict em subject_key, a coluna gerada com lower(trim(subject)):
+        // ensinar de novo sobre o mesmo tema corrige o que estava lá em vez de
+        // deixar duas versões brigando no prompt. Apontar para "subject" não
+        // funciona — o unique está na coluna gerada, e o Postgres recusa o
+        // ON CONFLICT que não casa com um índice existente.
         const res = await supabase.from("memories").upsert(
           {
             subject: str(args.assunto),
             content: str(args.fato),
+            kind: str(args.tipo) === "jeito" ? "jeito" : "fato",
             updated_at: new Date().toISOString(),
           },
-          { onConflict: "subject" }
+          { onConflict: "subject_key" }
         )
         error = res.error
       } else if (tool === "propor_link") {
@@ -123,7 +135,7 @@ export function ProposalCard({
       toast.success(
         tool === "propor_memoria"
           ? "Guardado na memória"
-          : `Salvo em ${meta.destino}`
+          : `Salvo em ${rotulo.destino}`
       )
       onResolve(proposal.id, "aceita")
     } finally {
@@ -152,9 +164,9 @@ export function ProposalCard({
     >
       <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-2">
         <Icone className="size-3.5 text-muted-foreground" />
-        <span className="text-xs font-medium">{meta.titulo}</span>
+        <span className="text-xs font-medium">{rotulo.titulo}</span>
         <span className="font-mono text-[11px] text-muted-foreground">
-          {meta.destino}
+          {rotulo.destino}
         </span>
         {status !== "pendente" && (
           <span className="ml-auto font-mono text-[11px] text-muted-foreground">

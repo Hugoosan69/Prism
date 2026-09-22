@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NAV_ITEMS } from "@/lib/navigation"
+import { PrismMark } from "@/components/brand/prism-mark"
 
 type Mode = "entrar" | "recuperar"
 
@@ -139,11 +140,7 @@ export default function LoginPage() {
           {/* Identidade compacta quando o manifesto não cabe */}
           <div className="mb-8 lg:hidden">
             <div className="flex items-center gap-3">
-              <div className="prism-spectrum flex size-9 items-center justify-center rounded-[10px]">
-                <span className="font-mono text-sm font-bold text-black/75">
-                  P
-                </span>
-              </div>
+              <PrismMark className="size-9" />
               <div>
                 <h1 className="text-lg leading-tight font-semibold tracking-tight">
                   Prism

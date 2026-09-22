@@ -243,22 +243,28 @@ const WRITE_TOOLS: ToolSchema[] = [
     function: {
       name: "propor_memoria",
       description:
-        "Propõe guardar um fato na sua memória de longo prazo, para valer em TODAS as conversas futuras. Use quando Hugo corrigir você, ensinar o que significa um termo do trabalho dele (uma rotina, uma tabela, um cliente) ou disser como prefere que você faça algo. NÃO guarda: vira proposta para ele confirmar.",
+        "Propõe guardar algo na sua memória de longo prazo, para valer em TODAS as conversas futuras. Duas naturezas: um fato do mundo de Hugo (uma rotina, uma tabela, um cliente) ou um jeito seu de ser (como ele quer que você responda, trate ou se comporte). Use quando ele corrigir você ou ensinar algo que vai valer de novo. NÃO guarda: vira proposta para ele confirmar.",
       parameters: {
         type: "object",
         properties: {
+          tipo: {
+            type: "string",
+            enum: ["fato", "jeito"],
+            description:
+              "fato = conhecimento sobre o trabalho dele ('a rotina 410 controla lock'). jeito = como você deve se comportar ('responda em tópicos', 'não use emoji', 'me chame pelo nome'). Na dúvida entre os dois: se a frase descreve VOCÊ, é jeito.",
+          },
           assunto: {
             type: "string",
             description:
-              "O tema em uma ou duas palavras, como 'rotina 410' ou 'clientes'. Se já existir memória com esse assunto, ela é substituída — use o mesmo assunto para corrigir algo que você guardou errado.",
+              "O tema em uma ou duas palavras, como 'rotina 410' ou 'tamanho da resposta'. Se já existir memória com esse assunto, ela é substituída — use o mesmo assunto para corrigir algo que você guardou errado.",
           },
           fato: {
             type: "string",
             description:
-              "O que lembrar, em uma ou duas frases, escrito para ser lido fora de contexto.",
+              "O que lembrar, em uma ou duas frases, escrito para ser lido fora de contexto. Para um jeito, escreva como instrução para você mesmo ('responda sempre em tópicos curtos'), não como relato sobre Hugo.",
           },
         },
-        required: ["assunto", "fato"],
+        required: ["tipo", "assunto", "fato"],
       },
     },
   },
@@ -573,14 +579,29 @@ async function webSearch(consulta: string, limite: number, chave: string) {
  * prompt para fora. Se um dia passar disso, o caminho é buscar por assunto em
  * vez de mandar tudo.
  */
+/**
+ * Memória dividida por natureza, porque os dois grupos vão para lugares
+ * diferentes do prompt.
+ *
+ * Um **fato** é conhecimento e entra junto do que o assistente já sabe. Um
+ * **jeito** é comportamento e entra junto das regras de conversa: a mesma frase
+ * colocada no bloco de conhecimento vira curiosidade sobre Hugo em vez de ordem
+ * sobre si mesmo, e o modelo não a obedece. A posição é que decide.
+ */
 export async function carregarMemorias(supabase: Supabase) {
   const { data } = await supabase
     .from("memories")
-    .select("subject, content")
+    .select("subject, content, kind")
     .order("updated_at", { ascending: false })
     .limit(60)
 
-  return (data ?? []).map((m) => `- ${m.subject}: ${m.content}`).join("\n")
+  const linhas = (grupo: string) =>
+    (data ?? [])
+      .filter((m) => m.kind === grupo)
+      .map((m) => `- ${m.subject}: ${m.content}`)
+      .join("\n")
+
+  return { fatos: linhas("fato"), jeitos: linhas("jeito") }
 }
 
 /** Corta texto longo preservando o começo, que é onde mora o assunto. */
