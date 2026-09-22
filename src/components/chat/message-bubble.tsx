@@ -8,9 +8,12 @@ import { TOOL_LABELS, type Message } from "./types"
 
 export function MessageBubble({
   message,
+  pending,
   onResolveProposal,
 }: {
   message: Message
+  /** Resposta ainda em curso: a bolha mostra sinal de vida, não vazio. */
+  pending?: boolean
   onResolveProposal: (id: string, status: "aceita" | "recusada") => void
 }) {
   const [showReasoning, setShowReasoning] = useState(false)
@@ -58,9 +61,20 @@ export function MessageBubble({
         </div>
       )}
 
-      <div className="text-[15px] leading-relaxed">
-        <MarkdownPreview content={message.content} />
-      </div>
+      {message.content ? (
+        <div className="text-[15px] leading-relaxed">
+          <MarkdownPreview content={message.content} />
+        </div>
+      ) : pending ? (
+        // O modelo leva de 10 a 20 segundos para o primeiro token. Sem isto a
+        // bolha fica vazia todo esse tempo, o que parece travamento — e leva a
+        // clicar no botão de parar achando que é enviar.
+        <Pensando reasoning={message.reasoning} />
+      ) : (
+        <p className="text-[13px] text-muted-foreground italic">
+          Sem resposta — a geração foi interrompida.
+        </p>
+      )}
 
       {message.proposals?.map((proposal) => (
         <ProposalCard
@@ -93,5 +107,37 @@ export function MessageBubble({
         )}
       </div>
     </div>
+  )
+}
+
+/** Sinal de vida enquanto o modelo pensa, mostrando o raciocínio que já chegou. */
+function Pensando({ reasoning }: { reasoning?: string }) {
+  const ultimo = reasoning?.trim().split("\n").at(-1) ?? ""
+
+  return (
+    <div className="space-y-1.5">
+      <p className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="flex gap-1">
+          <Dot delay="0ms" />
+          <Dot delay="150ms" />
+          <Dot delay="300ms" />
+        </span>
+        Pensando
+      </p>
+      {ultimo && (
+        <p className="line-clamp-2 border-l-2 pl-3 text-xs text-muted-foreground/80">
+          {ultimo}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function Dot({ delay }: { delay: string }) {
+  return (
+    <span
+      className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60"
+      style={{ animationDelay: delay }}
+    />
   )
 }

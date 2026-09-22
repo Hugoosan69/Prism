@@ -41,6 +41,8 @@ export function ChatView({
   const [streaming, setStreaming] = useState(false)
   const [activity, setActivity] = useState<string | null>(null)
   const [historyOpen, setHistoryOpen] = useState(false)
+  /** Id da resposta que está sendo gerada, para a bolha mostrar "Pensando". */
+  const [pendingId, setPendingId] = useState<string | null>(null)
 
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -134,6 +136,7 @@ export function ChatView({
       ...history,
       { id: assistantId, role: "assistant", content: "", reasoning: "" },
     ])
+    setPendingId(assistantId)
 
     await ensureThread(question)
     await persist("user", question)
@@ -228,11 +231,22 @@ export function ChatView({
         }
       }
 
-      await persist("assistant", content, { reasoning })
-      router.refresh()
+      // Resposta vazia não vira registro: ao reabrir a conversa ela apareceria
+      // como uma bolha morta, sem dizer o que houve.
+      if (content.trim()) {
+        await persist("assistant", content, { reasoning })
+        router.refresh()
+      } else {
+        setMessages((prev) => prev.filter((m) => m.id !== assistantId))
+        toast.error("O modelo não devolveu resposta. Tente de novo.")
+      }
     } catch (error) {
       if (controller.signal.aborted) {
-        await persist("assistant", content, { reasoning })
+        if (content.trim()) {
+          await persist("assistant", content, { reasoning })
+        } else {
+          setMessages((prev) => prev.filter((m) => m.id !== assistantId))
+        }
       } else {
         const message =
           error instanceof Error ? error.message : "Falha ao responder."
@@ -248,6 +262,7 @@ export function ChatView({
     } finally {
       setStreaming(false)
       setActivity(null)
+      setPendingId(null)
       abortRef.current = null
     }
   }
@@ -334,6 +349,7 @@ export function ChatView({
                   <MessageBubble
                     key={message.id}
                     message={message}
+                    pending={message.id === pendingId}
                     onResolveProposal={(proposalId, status) =>
                       resolveProposal(message.id, proposalId, status)
                     }

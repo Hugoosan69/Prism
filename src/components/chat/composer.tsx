@@ -84,13 +84,19 @@ export function Composer({
 
           <div className="ml-auto">
             {streaming ? (
-              <button
-                onClick={onStop}
-                aria-label="Parar"
-                className="flex size-8 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted/70"
-              >
-                <Square className="size-3 fill-current" />
-              </button>
+              <span className="flex items-center gap-2">
+                <span className="text-[11px] text-muted-foreground">
+                  respondendo…
+                </span>
+                <button
+                  onClick={onStop}
+                  aria-label="Parar resposta"
+                  title="Parar resposta"
+                  className="flex size-8 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted/70"
+                >
+                  <Square className="size-3 fill-current" />
+                </button>
+              </span>
             ) : (
               <button
                 onClick={onSend}
