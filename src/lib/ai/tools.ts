@@ -259,8 +259,43 @@ const SEARCHABLE: Record<string, string[]> = {
 type Supabase = SupabaseClient<Database>
 type ModuleTable = "snippets" | "notes" | "tasks" | "links"
 
+/**
+ * Palavras que valem a pena procurar.
+ *
+ * O modelo manda a pergunta quase inteira como termo ("lock na rotina 410"), e
+ * um ilike com a frase toda não casa com nada — foi assim que "Remove lock 410"
+ * deixou de ser encontrado. Aqui a frase vira palavras, e as vazias de conteúdo
+ * saem para não empatar tudo com todos.
+ */
+const VAZIAS = new Set([
+  "a", "as", "o", "os", "um", "uma", "de", "do", "da", "dos", "das", "em",
+  "no", "na", "nos", "nas", "por", "para", "pra", "com", "sem", "que", "qual",
+  "quais", "sobre", "existe", "tem", "ter", "algum", "alguma", "meu", "minha",
+  "eu", "me", "e", "ou", "se", "ao", "aos", "rotina", "query", "consulta",
+])
+
+function palavrasDe(termo: string) {
+  return [
+    ...new Set(
+      termo
+        .toLowerCase()
+        .split(/[^\p{L}\p{N}_]+/u)
+        .filter((p) => p.length >= 2 && !VAZIAS.has(p))
+    ),
+  ].slice(0, 6)
+}
+
 function orFilter(table: ModuleTable, termo: string) {
   return SEARCHABLE[table].map((c) => `${c}.ilike.%${termo}%`).join(",")
+}
+
+/** Quantas das palavras aparecem no item: serve de nota para ordenar. */
+function pontuar(item: Record<string, unknown>, palavras: string[]) {
+  const texto = Object.values(item)
+    .filter((v) => typeof v === "string")
+    .join(" ")
+    .toLowerCase()
+  return palavras.filter((p) => texto.includes(p)).length
 }
 
 async function searchTable(
@@ -270,7 +305,17 @@ async function searchTable(
   limite: number,
   status?: string
 ) {
-  const or = termo ? orFilter(table, termo) : null
+  const palavras = palavrasDe(termo)
+  // Uma palavra só: o ilike simples resolve. Várias: procura cada uma em
+  // qualquer coluna e ordena pelo número de acertos, senão exigir todas
+  // juntas descartaria o resultado certo.
+  const or = !termo
+    ? null
+    : palavras.length <= 1
+      ? orFilter(table, palavras[0] ?? termo)
+      : palavras
+          .flatMap((p) => SEARCHABLE[table].map((c) => `${c}.ilike.%${p}%`))
+          .join(",")
   // "pendentes" não é um status do banco: é o par que depende de Hugo agora.
   const estados =
     status === "pendentes" ? ["todo", "doing"] : status ? [status] : null
@@ -312,7 +357,17 @@ async function searchTable(
 
   const { data, error } = await run()
   if (error) return { erro: error.message }
-  return { modulo: table, itens: data ?? [] }
+
+  const itens = data ?? []
+  if (palavras.length <= 1) return { modulo: table, itens }
+
+  // Mais palavras casadas primeiro; a ordem do banco decide os empates.
+  const ordenados = [...itens].sort(
+    (a, b) =>
+      pontuar(b as Record<string, unknown>, palavras) -
+      pontuar(a as Record<string, unknown>, palavras)
+  )
+  return { modulo: table, itens: ordenados }
 }
 
 async function readItem(supabase: Supabase, table: ModuleTable, id: string) {

@@ -344,7 +344,10 @@ export function ChatView({
         ) : (
           <>
             <div className="min-h-0 flex-1 overflow-y-auto px-4">
-              <div className="mx-auto w-full max-w-3xl space-y-6 pt-8 pb-6">
+              {/* justify-end + min-h-full: com poucas mensagens a conversa
+                  encosta no composer em vez de ficar colada no topo, deixando
+                  um vazio no meio da tela em monitor alto. */}
+              <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-end space-y-6 pt-8 pb-6">
                 {messages.map((message) => (
                   <MessageBubble
                     key={message.id}
