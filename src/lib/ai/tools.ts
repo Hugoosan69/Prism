@@ -219,6 +219,38 @@ const WRITE_TOOLS: ToolSchema[] = [
   {
     type: "function",
     function: {
+      name: "propor_edicao_nota",
+      description:
+        "Propõe ALTERAR uma nota que já existe, em vez de criar outra. Use sempre que Hugo pedir para incluir, acrescentar, corrigir ou completar algo em uma nota — 'inclua na nota', 'adiciona isso ali', 'corrige aquela parte'. Antes de chamar, use buscar_no_prism para achar o id da nota. NÃO altera nada: vira proposta para Hugo confirmar.",
+      parameters: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "id da nota, vindo de buscar_no_prism.",
+          },
+          acrescentar: {
+            type: "string",
+            description:
+              "Markdown a juntar no fim da nota, preservando o que já está lá. É o que você quer em 'inclua na nota X' — não exige ter lido a nota inteira e não corre risco de apagar nada.",
+          },
+          conteudo: {
+            type: "string",
+            description:
+              "Conteúdo novo da nota INTEIRA, substituindo o atual. Só use quando o pedido for reescrever ou corrigir algo no meio do texto, e só depois de ler a nota com ler_item_do_prism — o que você mandar aqui apaga o resto.",
+          },
+          titulo: {
+            type: "string",
+            description: "Novo título, quando o pedido for renomear.",
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "propor_snippet",
       description:
         "Propõe salvar uma consulta na biblioteca de SQL. NÃO salva: vira uma proposta para Hugo confirmar.",

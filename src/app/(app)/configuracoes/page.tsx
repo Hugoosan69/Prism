@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { Bot, Brain, LogOut } from "lucide-react"
+import { Bot, Brain, LogOut, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
+import { AgentInstructionsForm } from "@/components/chat/agent-instructions-form"
 import { AiSettingsForm } from "@/components/chat/ai-settings-form"
 import { MemoryManager } from "@/components/chat/memory-manager"
 import { createClient } from "@/lib/supabase/client"
@@ -240,6 +241,22 @@ export default function ConfiguracoesPage() {
               está valendo.
             </p>
             <AiSettingsForm />
+          </div>
+        </section>
+
+        {/* A personalidade escrita à mão. Fica acima da memória de propósito:
+            é a camada que Hugo controla, e a que vence quando as duas
+            discordam. */}
+        <section className="space-y-3">
+          <SectionTitle>Diretrizes do assistente</SectionTitle>
+          <div className="space-y-4 rounded-xl border bg-card p-5">
+            <p className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Sparkles className="mt-0.5 size-3.5 shrink-0" />
+              Como ele deve trabalhar e responder. Vai direto para a instrução
+              do modelo, então escreva no imperativo e seja específico — e onde
+              isto discordar do que ele aprendeu sozinho, isto vence.
+            </p>
+            <AgentInstructionsForm />
           </div>
         </section>
 

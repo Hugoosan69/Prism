@@ -308,6 +308,7 @@ export type Database = {
         Row: {
           ai_api_key: string
           ai_base_url: string
+          ai_instructions: string
           ai_model: string
           id: boolean
           tavily_api_key: string
@@ -316,6 +317,7 @@ export type Database = {
         Insert: {
           ai_api_key?: string
           ai_base_url?: string
+          ai_instructions?: string
           ai_model?: string
           id?: boolean
           tavily_api_key?: string
@@ -324,6 +326,7 @@ export type Database = {
         Update: {
           ai_api_key?: string
           ai_base_url?: string
+          ai_instructions?: string
           ai_model?: string
           id?: boolean
           tavily_api_key?: string

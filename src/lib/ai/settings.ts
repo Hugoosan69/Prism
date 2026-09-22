@@ -21,6 +21,8 @@ export type AiSettings = {
   model: string
   apiKey: string
   tavilyKey: string
+  /** Diretriz escrita por Hugo. Vazio = só a personalidade de partida vale. */
+  instructions: string
 }
 
 export const PADRAO: AiSettings = {
@@ -28,6 +30,7 @@ export const PADRAO: AiSettings = {
   model: AI_MODEL,
   apiKey: AI_API_KEY,
   tavilyKey: TAVILY_API_KEY,
+  instructions: "",
 }
 
 /**
@@ -43,7 +46,7 @@ export async function carregarSettings(
   try {
     const { data } = await supabase
       .from("settings")
-      .select("ai_base_url, ai_model, ai_api_key, tavily_api_key")
+      .select("ai_base_url, ai_model, ai_api_key, tavily_api_key, ai_instructions")
       .maybeSingle()
 
     if (!data) return PADRAO
@@ -53,6 +56,7 @@ export async function carregarSettings(
       model: data.ai_model?.trim() || PADRAO.model,
       apiKey: data.ai_api_key?.trim() || PADRAO.apiKey,
       tavilyKey: data.tavily_api_key?.trim() || PADRAO.tavilyKey,
+      instructions: data.ai_instructions?.trim() ?? "",
     }
   } catch {
     return PADRAO

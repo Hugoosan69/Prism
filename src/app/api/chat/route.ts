@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
   const memorias = await carregarMemorias(supabase)
 
   const messages: ChatMessage[] = [
-    { role: "system", content: montarPrompt(memorias) },
+    { role: "system", content: montarPrompt({ ...memorias, diretriz: settings.instructions }) },
     ...recentes.map((m): ChatMessage => {
       if (m.role === "tool") {
         return {

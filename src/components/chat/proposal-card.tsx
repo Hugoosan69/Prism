@@ -11,11 +11,12 @@
  * Kanban depois.
  */
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Brain,
   Check,
   Database,
+  FilePen,
   Link2,
   SquareKanban,
   StickyNote,
@@ -39,6 +40,11 @@ const META: Record<
 > = {
   propor_tarefa: { titulo: "Nova tarefa", destino: "Kanban", icone: SquareKanban },
   propor_nota: { titulo: "Nova nota", destino: "Notas", icone: StickyNote },
+  propor_edicao_nota: {
+    titulo: "Atualizar nota",
+    destino: "altera uma nota que já existe",
+    icone: FilePen,
+  },
   propor_snippet: { titulo: "Nova consulta", destino: "SQL", icone: Database },
   propor_link: { titulo: "Novo link", destino: "Links", icone: Link2 },
   propor_memoria: { titulo: "Guardar na memória", destino: "vale em toda conversa", icone: Brain },
@@ -57,6 +63,9 @@ export function ProposalCard({
   onResolve: (id: string, status: "aceita" | "recusada") => void
 }) {
   const [saving, setSaving] = useState(false)
+  // Numa edição o card só recebe o id. Sem buscar o título, Hugo confirmaria
+  // uma alteração sem saber em qual nota ela cai.
+  const [notaAlvo, setNotaAlvo] = useState<string | null>(null)
   const { tool, args, status } = proposal
   const meta = META[tool] ?? {
     titulo: "Proposta",
@@ -71,6 +80,17 @@ export function ProposalCard({
     tool === "propor_memoria" && str(args.tipo) === "jeito"
       ? { titulo: "Ajustar seu jeito", destino: "muda como o assistente responde" }
       : meta
+
+  const idNota = tool === "propor_edicao_nota" ? str(args.id) : ""
+  useEffect(() => {
+    if (!idNota) return
+    createClient()
+      .from("notes")
+      .select("title")
+      .eq("id", idNota)
+      .maybeSingle()
+      .then(({ data }) => setNotaAlvo(data?.title ?? "nota não encontrada"))
+  }, [idNota])
 
   async function accept() {
     setSaving(true)
@@ -93,6 +113,39 @@ export function ProposalCard({
           title: str(args.titulo),
           content: str(args.conteudo),
         })
+        error = res.error
+      } else if (tool === "propor_edicao_nota") {
+        // Acrescentar é o caso comum ("inclua na nota X") e é o seguro: o
+        // conteúdo atual é lido na hora de gravar, então nada se perde mesmo
+        // que o modelo nunca tenha visto a nota inteira. Substituir só acontece
+        // quando ele mandou conteudo explicitamente.
+        const atual = await supabase
+          .from("notes")
+          .select("content")
+          .eq("id", str(args.id))
+          .maybeSingle()
+
+        if (!atual.data) {
+          toast.error("Essa nota não existe mais.")
+          return
+        }
+
+        const juntar = str(args.acrescentar).trim()
+        const substituir = str(args.conteudo).trim()
+        const conteudo = juntar
+          ? `${atual.data.content.trimEnd()}\n\n${juntar}`
+          : substituir || atual.data.content
+
+        const mudancas: { content: string; updated_at: string; title?: string } = {
+          content: conteudo,
+          updated_at: new Date().toISOString(),
+        }
+        if (str(args.titulo).trim()) mudancas.title = str(args.titulo).trim()
+
+        const res = await supabase
+          .from("notes")
+          .update(mudancas)
+          .eq("id", str(args.id))
         error = res.error
       } else if (tool === "propor_snippet") {
         const res = await supabase.from("snippets").insert({
@@ -135,7 +188,9 @@ export function ProposalCard({
       toast.success(
         tool === "propor_memoria"
           ? "Guardado na memória"
-          : `Salvo em ${rotulo.destino}`
+          : tool === "propor_edicao_nota"
+            ? "Nota atualizada"
+            : `Salvo em ${rotulo.destino}`
       )
       onResolve(proposal.id, "aceita")
     } finally {
@@ -143,13 +198,18 @@ export function ProposalCard({
     }
   }
 
-  const titulo = str(args.titulo) || str(args.assunto)
+  const titulo =
+    tool === "propor_edicao_nota"
+      ? (notaAlvo ?? "carregando…")
+      : str(args.titulo) || str(args.assunto)
   const corpo =
-    str(args.descricao) ||
-    str(args.conteudo) ||
-    str(args.codigo) ||
-    str(args.url) ||
-    str(args.fato)
+    tool === "propor_edicao_nota"
+      ? str(args.acrescentar) || str(args.conteudo)
+      : str(args.descricao) ||
+        str(args.conteudo) ||
+        str(args.codigo) ||
+        str(args.url) ||
+        str(args.fato)
   const monoespacado = tool === "propor_snippet"
 
   const tags = Array.isArray(args.tags) ? args.tags.map(String) : []
@@ -170,7 +230,11 @@ export function ProposalCard({
         </span>
         {status !== "pendente" && (
           <span className="ml-auto font-mono text-[11px] text-muted-foreground">
-            {status === "aceita" ? "criada" : "descartada"}
+            {status === "recusada"
+              ? "descartada"
+              : tool === "propor_edicao_nota"
+                ? "atualizada"
+                : "criada"}
           </span>
         )}
       </div>
@@ -203,6 +267,14 @@ export function ProposalCard({
           </div>
         )}
 
+        {tool === "propor_edicao_nota" && (
+          <p className="text-[11px] text-muted-foreground">
+            {str(args.acrescentar).trim()
+              ? "Vai ser acrescentado no fim da nota; o que já está lá continua."
+              : "Substitui o conteúdo atual da nota."}
+          </p>
+        )}
+
         {tool === "propor_snippet" && str(args.categoria) && (
           <p className="text-[11px] text-muted-foreground">
             {str(args.categoria)}
@@ -218,7 +290,9 @@ export function ProposalCard({
               ? "Salvando…"
               : tool === "propor_memoria"
                 ? "Guardar"
-                : "Criar"}
+                : tool === "propor_edicao_nota"
+                  ? "Atualizar"
+                  : "Criar"}
           </Button>
           <Button
             size="sm"
