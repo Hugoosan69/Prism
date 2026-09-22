@@ -94,7 +94,10 @@ export async function* streamChat(
       messages,
       temperature: 1,
       top_p: 0.95,
-      max_tokens: MAX_TOKENS,
+      // `max_tokens` foi aposentado: os modelos da série 5 recusam o pedido
+      // com 400. `max_completion_tokens` é aceito tanto por eles quanto pelos
+      // da série 4, então serve para qualquer modelo que venha depois.
+      max_completion_tokens: MAX_TOKENS,
       stream: true,
       ...(tools.length > 0 ? { tools, tool_choice: "auto" } : {}),
     }),

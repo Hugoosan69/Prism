@@ -13,13 +13,14 @@
  * rápido mas com o plano gratuito limitando 7.000 tokens de entrada por minuto
  * — uma pergunta que consultasse o cofre consumia a cota inteira e morria com
  * 429 depois de já ter feito o trabalho. Agora OpenAI `gpt-4.1-mini`: responde
- * em 1 a 2 segundos e permite 200.000 tokens por minuto.
+ * em 1 a 2 segundos e permite 200.000 tokens por minuto; em 23/09 passou para
+ * `gpt-5.4-nano`, medido em ~0,7s contra ~1,0s do mini na mesma pergunta.
  *
  * Trocar de novo é mexer nestas três constantes e na variável da chave.
  */
 export const AI_BASE_URL =
   process.env.AI_BASE_URL ?? "https://api.openai.com/v1"
-export const AI_MODEL = process.env.AI_MODEL ?? "gpt-4.1-mini"
+export const AI_MODEL = process.env.AI_MODEL ?? "gpt-5.4-nano"
 
 /** Aceita o nome genérico ou o do provedor da vez, nesta ordem. */
 export const AI_API_KEY =
