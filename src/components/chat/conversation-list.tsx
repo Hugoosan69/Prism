@@ -76,7 +76,10 @@ export function ConversationList({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    // min-w-0 em toda a cadeia: sem ele o item não encolhe abaixo do próprio
+    // texto, o truncate não corta e o título empurra a caixa para fora da
+    // coluna, passando por cima da borda.
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col">
       <div className="p-3">
         <Link
           href="/chat"
@@ -88,21 +91,21 @@ export function ConversationList({
         </Link>
       </div>
 
-      <nav className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
+      <nav className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-2 pb-3">
         {threads.length === 0 ? (
           <p className="px-2 py-4 text-xs text-muted-foreground">
             Nenhuma conversa ainda.
           </p>
         ) : (
           group(threads).map(([label, items]) => (
-            <div key={label} className="mb-3">
+            <div key={label} className="mb-3 min-w-0">
               <p className="px-2 pb-1 text-[11px] font-medium text-muted-foreground capitalize">
                 {label}
               </p>
               {items.map((thread) => (
                 <div
                   key={thread.id}
-                  className={`group/item flex items-center gap-1 rounded-lg pr-1 transition-colors ${
+                  className={`group/item flex min-w-0 items-center gap-1 rounded-lg pr-1 transition-colors ${
                     thread.id === activeId
                       ? "bg-muted"
                       : "hover:bg-muted/60"

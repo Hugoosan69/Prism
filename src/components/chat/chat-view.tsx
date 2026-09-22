@@ -304,7 +304,7 @@ export function ChatView({
     <div className="flex min-h-0 flex-1">
       {/* No desktop a lista fica sempre à vista; no celular ela vira painel,
           senão o histórico simplesmente não existiria por lá. */}
-      <aside className="hidden w-60 shrink-0 border-r md:flex">
+      <aside className="hidden w-60 shrink-0 overflow-hidden border-r md:flex">
         <ConversationList threads={threads} activeId={threadId} />
       </aside>
 
