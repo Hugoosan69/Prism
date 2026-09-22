@@ -208,6 +208,30 @@ const WRITE_TOOLS: ToolSchema[] = [
   {
     type: "function",
     function: {
+      name: "propor_memoria",
+      description:
+        "Propõe guardar um fato na sua memória de longo prazo, para valer em TODAS as conversas futuras. Use quando Hugo corrigir você, ensinar o que significa um termo do trabalho dele (uma rotina, uma tabela, um cliente) ou disser como prefere que você faça algo. NÃO guarda: vira proposta para ele confirmar.",
+      parameters: {
+        type: "object",
+        properties: {
+          assunto: {
+            type: "string",
+            description:
+              "O tema em uma ou duas palavras, como 'rotina 410' ou 'clientes'. Se já existir memória com esse assunto, ela é substituída — use o mesmo assunto para corrigir algo que você guardou errado.",
+          },
+          fato: {
+            type: "string",
+            description:
+              "O que lembrar, em uma ou duas frases, escrito para ser lido fora de contexto.",
+          },
+        },
+        required: ["assunto", "fato"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "propor_link",
       description:
         "Propõe salvar um link. NÃO salva: vira uma proposta para Hugo confirmar.",
@@ -415,6 +439,24 @@ async function webSearch(consulta: string, limite: number) {
       trecho: r.content?.slice(0, 700) ?? "",
     })),
   }
+}
+
+/**
+ * Lê a memória de longo prazo para injetar no prompt.
+ *
+ * Vai inteira e em toda pergunta, por isso o teto: memória é contexto que o
+ * modelo recebe sem pedir, e um acervo grande demais empurraria o resto do
+ * prompt para fora. Se um dia passar disso, o caminho é buscar por assunto em
+ * vez de mandar tudo.
+ */
+export async function carregarMemorias(supabase: Supabase) {
+  const { data } = await supabase
+    .from("memories")
+    .select("subject, content")
+    .order("updated_at", { ascending: false })
+    .limit(60)
+
+  return (data ?? []).map((m) => `- ${m.subject}: ${m.content}`).join("\n")
 }
 
 /** Corta texto longo preservando o começo, que é onde mora o assunto. */

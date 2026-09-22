@@ -17,10 +17,11 @@ import {
   LIMITE_HISTORICO,
   MAX_TOOL_ROUNDS,
 } from "@/lib/ai/config"
-import { SYSTEM_PROMPT } from "@/lib/ai/prompt"
+import { montarPrompt } from "@/lib/ai/prompt"
 import { streamChat, type ChatMessage, type ToolCall } from "@/lib/ai/client"
 import {
   availableTools,
+  carregarMemorias,
   runReadTool,
   serializarResultado,
   WRITE_TOOL_NAMES,
@@ -81,8 +82,12 @@ export async function POST(request: NextRequest) {
   // conversa inteira continua na tela e no banco.
   const recentes = history.slice(-LIMITE_HISTORICO)
 
+  // A memória entra no prompt de toda pergunta: é o que o assistente "já sabe"
+  // sem precisar perguntar de novo.
+  const memorias = await carregarMemorias(supabase)
+
   const messages: ChatMessage[] = [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: montarPrompt(memorias) },
     ...recentes.map((m): ChatMessage => {
       if (m.role === "tool") {
         return {

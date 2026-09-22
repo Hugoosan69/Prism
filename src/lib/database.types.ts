@@ -249,6 +249,30 @@ export type Database = {
           },
         ]
       }
+      memories: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           content: string

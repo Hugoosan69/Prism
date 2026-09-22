@@ -12,7 +12,15 @@
  */
 
 import { useState } from "react"
-import { Check, Database, Link2, StickyNote, SquareKanban, X } from "lucide-react"
+import {
+  Brain,
+  Check,
+  Database,
+  Link2,
+  SquareKanban,
+  StickyNote,
+  X,
+} from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
@@ -33,6 +41,7 @@ const META: Record<
   propor_nota: { titulo: "Nova nota", destino: "Notas", icone: StickyNote },
   propor_snippet: { titulo: "Nova consulta", destino: "SQL", icone: Database },
   propor_link: { titulo: "Novo link", destino: "Links", icone: Link2 },
+  propor_memoria: { titulo: "Guardar na memória", destino: "vale em toda conversa", icone: Brain },
 }
 
 function str(value: unknown): string {
@@ -85,6 +94,18 @@ export function ProposalCard({
           category: str(args.categoria),
         })
         error = res.error
+      } else if (tool === "propor_memoria") {
+        // onConflict no assunto: ensinar de novo sobre o mesmo tema corrige o
+        // que estava lá, em vez de deixar duas versões brigando no prompt.
+        const res = await supabase.from("memories").upsert(
+          {
+            subject: str(args.assunto),
+            content: str(args.fato),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "subject" }
+        )
+        error = res.error
       } else if (tool === "propor_link") {
         const res = await supabase.from("links").insert({
           title: str(args.titulo),
@@ -99,16 +120,24 @@ export function ProposalCard({
         return
       }
 
-      toast.success(`Salvo em ${meta.destino}`)
+      toast.success(
+        tool === "propor_memoria"
+          ? "Guardado na memória"
+          : `Salvo em ${meta.destino}`
+      )
       onResolve(proposal.id, "aceita")
     } finally {
       setSaving(false)
     }
   }
 
-  const titulo = str(args.titulo)
+  const titulo = str(args.titulo) || str(args.assunto)
   const corpo =
-    str(args.descricao) || str(args.conteudo) || str(args.codigo) || str(args.url)
+    str(args.descricao) ||
+    str(args.conteudo) ||
+    str(args.codigo) ||
+    str(args.url) ||
+    str(args.fato)
   const monoespacado = tool === "propor_snippet"
 
   const tags = Array.isArray(args.tags) ? args.tags.map(String) : []
@@ -173,7 +202,11 @@ export function ProposalCard({
         <div className="flex gap-2 border-t px-3 py-2">
           <Button size="sm" onClick={accept} disabled={saving}>
             <Check className="size-3.5" />
-            {saving ? "Salvando…" : "Criar"}
+            {saving
+              ? "Salvando…"
+              : tool === "propor_memoria"
+                ? "Guardar"
+                : "Criar"}
           </Button>
           <Button
             size="sm"

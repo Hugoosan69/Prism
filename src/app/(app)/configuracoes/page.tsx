@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { LogOut } from "lucide-react"
+import { Brain, LogOut } from "lucide-react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
+import { MemoryManager } from "@/components/chat/memory-manager"
 import { createClient } from "@/lib/supabase/client"
 
 type Profile = {
@@ -226,6 +227,20 @@ export default function ConfiguracoesPage() {
               {savingPassword ? "Salvando..." : "Alterar senha"}
             </Button>
           </form>
+        </section>
+
+        {/* O que o assistente aprendeu: fica aqui porque entra no prompt de
+            toda pergunta, e fato errado guardado contamina tudo depois. */}
+        <section className="space-y-3">
+          <SectionTitle>Memória do assistente</SectionTitle>
+          <div className="space-y-3 rounded-xl border bg-card p-5">
+            <p className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Brain className="mt-0.5 size-3.5 shrink-0" />
+              O que o chat aprendeu com você e leva para todas as conversas.
+              Clique em um item para corrigir.
+            </p>
+            <MemoryManager />
+          </div>
         </section>
 
         {/* Sessão */}
