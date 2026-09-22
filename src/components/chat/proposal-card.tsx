@@ -5,65 +5,38 @@
  *
  * O modelo propõe, este componente grava — pelo supabase-js, do client, como
  * todo o resto do Prism. Enquanto Hugo não clicar, nada existe no banco.
+ *
+ * O card mostra os valores como o Prism os exibe (coluna "A Fazer", não
+ * "todo"), porque o que ele confere aqui tem de ser o que vai aparecer no
+ * Kanban depois.
  */
 
 import { useState } from "react"
-import { Check, X } from "lucide-react"
+import { Check, Database, Link2, StickyNote, SquareKanban, X } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { createClient } from "@/lib/supabase/client"
+import {
+  TASK_PRIORITY_LABELS,
+  TASK_STATUS_COLORS,
+  TASK_STATUS_LABELS,
+  type TaskPriority,
+  type TaskStatus,
+} from "@/lib/types"
 import type { Proposal } from "./types"
 
-const TITLES: Record<string, string> = {
-  propor_tarefa: "Criar tarefa",
-  propor_nota: "Criar nota",
-  propor_snippet: "Salvar consulta SQL",
-  propor_link: "Salvar link",
-}
-
-const DESTINATIONS: Record<string, string> = {
-  propor_tarefa: "Kanban",
-  propor_nota: "Notas",
-  propor_snippet: "SQL",
-  propor_link: "Links",
+const META: Record<
+  string,
+  { titulo: string; destino: string; icone: React.ElementType }
+> = {
+  propor_tarefa: { titulo: "Nova tarefa", destino: "Kanban", icone: SquareKanban },
+  propor_nota: { titulo: "Nova nota", destino: "Notas", icone: StickyNote },
+  propor_snippet: { titulo: "Nova consulta", destino: "SQL", icone: Database },
+  propor_link: { titulo: "Novo link", destino: "Links", icone: Link2 },
 }
 
 function str(value: unknown): string {
   return typeof value === "string" ? value : ""
-}
-
-/** Campos mostrados no card, em ordem de importância para conferir. */
-function preview(tool: string, args: Record<string, unknown>) {
-  switch (tool) {
-    case "propor_tarefa":
-      return [
-        ["Título", str(args.titulo)],
-        ["Descrição", str(args.descricao)],
-        ["Coluna", str(args.status) || "todo"],
-        ["Prioridade", str(args.prioridade) || "medium"],
-        ["Tags", (Array.isArray(args.tags) ? args.tags : []).join(", ")],
-      ]
-    case "propor_nota":
-      return [
-        ["Título", str(args.titulo)],
-        ["Conteúdo", str(args.conteudo)],
-      ]
-    case "propor_snippet":
-      return [
-        ["Título", str(args.titulo)],
-        ["Categoria", str(args.categoria)],
-        ["Descrição", str(args.descricao)],
-        ["Código", str(args.codigo)],
-      ]
-    case "propor_link":
-      return [
-        ["Título", str(args.titulo)],
-        ["URL", str(args.url)],
-        ["Descrição", str(args.descricao)],
-      ]
-    default:
-      return []
-  }
 }
 
 export function ProposalCard({
@@ -75,6 +48,12 @@ export function ProposalCard({
 }) {
   const [saving, setSaving] = useState(false)
   const { tool, args, status } = proposal
+  const meta = META[tool] ?? {
+    titulo: "Proposta",
+    destino: "Prism",
+    icone: Database,
+  }
+  const Icone = meta.icone
 
   async function accept() {
     setSaving(true)
@@ -120,44 +99,78 @@ export function ProposalCard({
         return
       }
 
-      toast.success(`Salvo em ${DESTINATIONS[tool] ?? "Prism"}`)
+      toast.success(`Salvo em ${meta.destino}`)
       onResolve(proposal.id, "aceita")
     } finally {
       setSaving(false)
     }
   }
 
-  const fields = preview(tool, args).filter(([, value]) => value)
+  const titulo = str(args.titulo)
+  const corpo =
+    str(args.descricao) || str(args.conteudo) || str(args.codigo) || str(args.url)
+  const monoespacado = tool === "propor_snippet"
+
+  const tags = Array.isArray(args.tags) ? args.tags.map(String) : []
+  const taskStatus = (str(args.status) || "todo") as TaskStatus
+  const taskPriority = (str(args.prioridade) || "medium") as TaskPriority
 
   return (
-    <div className="my-2 rounded-lg border bg-card/50 p-3">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="text-xs font-medium">
-          {TITLES[tool] ?? "Proposta"}
-        </span>
+    <div
+      className={`my-3 overflow-hidden rounded-xl border transition-opacity ${
+        status === "recusada" ? "opacity-50" : ""
+      }`}
+    >
+      <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-2">
+        <Icone className="size-3.5 text-muted-foreground" />
+        <span className="text-xs font-medium">{meta.titulo}</span>
         <span className="font-mono text-[11px] text-muted-foreground">
-          → {DESTINATIONS[tool] ?? "Prism"}
+          {meta.destino}
         </span>
         {status !== "pendente" && (
           <span className="ml-auto font-mono text-[11px] text-muted-foreground">
-            {status}
+            {status === "aceita" ? "criada" : "descartada"}
           </span>
         )}
       </div>
 
-      <dl className="space-y-1.5">
-        {fields.map(([label, value]) => (
-          <div key={label} className="text-sm">
-            <dt className="text-[11px] text-muted-foreground">{label}</dt>
-            <dd className="whitespace-pre-wrap break-words font-[inherit]">
-              {value.length > 600 ? `${value.slice(0, 600)}…` : value}
-            </dd>
+      <div className="space-y-2 px-3 py-2.5">
+        <p className="text-sm font-medium">{titulo}</p>
+
+        {corpo && (
+          <p
+            className={`whitespace-pre-wrap text-muted-foreground ${
+              monoespacado ? "font-mono text-xs" : "text-[13px]"
+            }`}
+          >
+            {corpo.length > 400 ? `${corpo.slice(0, 400)}…` : corpo}
+          </p>
+        )}
+
+        {tool === "propor_tarefa" && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <span
+                aria-hidden
+                className="size-1.5 rounded-full"
+                style={{ background: TASK_STATUS_COLORS[taskStatus] }}
+              />
+              {TASK_STATUS_LABELS[taskStatus]}
+            </span>
+            <span>Prioridade {TASK_PRIORITY_LABELS[taskPriority]}</span>
+            {tags.length > 0 && <span>{tags.join(" · ")}</span>}
           </div>
-        ))}
-      </dl>
+        )}
+
+        {tool === "propor_snippet" && str(args.categoria) && (
+          <p className="text-[11px] text-muted-foreground">
+            {str(args.categoria)}
+          </p>
+        )}
+      </div>
 
       {status === "pendente" && (
-        <div className="mt-3 flex gap-2">
+        <div className="flex gap-2 border-t px-3 py-2">
           <Button size="sm" onClick={accept} disabled={saving}>
             <Check className="size-3.5" />
             {saving ? "Salvando…" : "Criar"}

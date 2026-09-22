@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/layout/app-sidebar"
+import { PageContainer } from "@/components/layout/page-container"
 import { Topbar } from "@/components/layout/topbar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
@@ -10,11 +11,10 @@ export default function AppLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      {/* h-svh + overflow-hidden: quem rola é a conversa, não a página. */}
+      <SidebarInset className="h-svh overflow-hidden">
         <Topbar />
-        <div className="mx-auto w-full max-w-6xl flex-1 px-6 py-7">
-          {children}
-        </div>
+        <PageContainer>{children}</PageContainer>
       </SidebarInset>
     </SidebarProvider>
   )

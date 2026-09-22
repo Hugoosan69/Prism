@@ -2,17 +2,22 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowUp, Loader2, Square } from "lucide-react"
+import { Loader2, MessagesSquare } from "lucide-react"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { createClient } from "@/lib/supabase/client"
+import { Composer } from "./composer"
+import { ConversationList, type ThreadSummary } from "./conversation-list"
 import { MessageBubble } from "./message-bubble"
-import { ThreadBar } from "./thread-bar"
+import { WelcomeScreen } from "./welcome-screen"
 import type { Message, Proposal, StreamEvent, ToolCall } from "./types"
 import { TOOL_LABELS } from "./types"
-
-type ThreadSummary = { id: string; title: string; updated_at: string }
 
 type Props = {
   threads: ThreadSummary[]
@@ -20,25 +25,22 @@ type Props = {
   initialMessages: Message[]
   /** Falso quando NVIDIA_API_KEY não existe; a tela explica em vez de quebrar. */
   enabled: boolean
+  sources: { prism: boolean; cofre: boolean; web: boolean }
 }
-
-const SUGGESTIONS = [
-  "Qual consulta eu tenho para rejeição de GTIN?",
-  "O que ficou pendente no meu Kanban?",
-  "Resume o que o Segundo Cérebro guarda sobre Supabase",
-]
 
 export function ChatView({
   threads,
   threadId,
   initialMessages,
   enabled,
+  sources,
 }: Props) {
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState("")
   const [streaming, setStreaming] = useState(false)
   const [activity, setActivity] = useState<string | null>(null)
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -46,9 +48,9 @@ export function ChatView({
   const loadedRef = useRef<string | null>(threadId)
 
   // Trocar de conversa recarrega a tela; um router.refresh() (que só existe
-  // para atualizar a lista de conversas) não pode. Sem esta guarda, a resposta
-  // recém-transmitida sumiria: a conversa nova ainda não está na URL que o Next
-  // conhece, então initialMessages voltaria vazio.
+  // para atualizar a lista lateral) não pode. Sem esta guarda, a resposta
+  // recém-transmitida sumiria: a conversa nova ainda não está na URL que o
+  // Next conhece, então initialMessages voltaria vazio.
   useEffect(() => {
     if (loadedRef.current === threadId) return
     loadedRef.current = threadId
@@ -61,18 +63,17 @@ export function ChatView({
   }, [messages, activity])
 
   /**
-   * Garante uma conversa no banco antes de gravar a primeira mensagem, e usa o
-   * início da pergunta como título — o suficiente para reconhecer a conversa na
-   * lista sem gastar uma chamada ao modelo só para nomear.
+   * Garante uma conversa no banco antes de gravar a primeira mensagem, usando
+   * o início da pergunta como título — suficiente para reconhecê-la na lista
+   * sem gastar uma chamada ao modelo só para dar nome.
    */
   async function ensureThread(firstMessage: string) {
     if (threadRef.current) return threadRef.current
 
     const supabase = createClient()
-    const title = firstMessage.slice(0, 70)
     const { data, error } = await supabase
       .from("chat_threads")
-      .insert({ title })
+      .insert({ title: firstMessage.slice(0, 70) })
       .select("id")
       .single()
 
@@ -82,6 +83,9 @@ export function ChatView({
     }
 
     threadRef.current = data.id
+    loadedRef.current = data.id
+    // replaceState em vez de router.replace: navegar aqui remontaria a tela no
+    // meio do streaming.
     window.history.replaceState(null, "", `/chat?thread=${data.id}`)
     return data.id
   }
@@ -100,7 +104,9 @@ export function ChatView({
       role,
       content,
       reasoning: extras.reasoning ?? "",
-      tool_calls: extras.toolCalls ? JSON.parse(JSON.stringify(extras.toolCalls)) : null,
+      tool_calls: extras.toolCalls
+        ? JSON.parse(JSON.stringify(extras.toolCalls))
+        : null,
     })
     await supabase
       .from("chat_threads")
@@ -110,7 +116,7 @@ export function ChatView({
 
   async function send(text: string) {
     const question = text.trim()
-    if (!question || streaming) return
+    if (!question || streaming || !enabled) return
 
     setInput("")
     setStreaming(true)
@@ -223,7 +229,6 @@ export function ChatView({
       }
 
       await persist("assistant", content, { reasoning })
-      // A lista de conversas do servidor fica velha depois de uma resposta.
       router.refresh()
     } catch (error) {
       if (controller.signal.aborted) {
@@ -266,103 +271,89 @@ export function ChatView({
     )
   }
 
-  const empty = messages.length === 0
+  const composer = (autoFocus: boolean, hint = false) => (
+    <Composer
+      value={input}
+      onChange={setInput}
+      onSend={() => send(input)}
+      onStop={() => abortRef.current?.abort()}
+      streaming={streaming}
+      disabled={!enabled}
+      sources={sources}
+      autoFocus={autoFocus}
+      hint={hint}
+    />
+  )
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] flex-col">
-      <ThreadBar threads={threads} activeId={threadId} />
+    <div className="flex min-h-0 flex-1">
+      {/* No desktop a lista fica sempre à vista; no celular ela vira painel,
+          senão o histórico simplesmente não existiria por lá. */}
+      <aside className="hidden w-60 shrink-0 border-r md:flex">
+        <ConversationList threads={threads} activeId={threadId} />
+      </aside>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {empty ? (
-          <div className="flex h-full flex-col items-center justify-center gap-5 px-4 text-center">
-            <div>
-              <h2 className="text-base font-medium">
-                O que você quer saber?
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Pergunte sobre suas consultas, notas e tarefas — ou sobre o
-                Segundo Cérebro.
-              </p>
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {SUGGESTIONS.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  onClick={() => send(suggestion)}
-                  disabled={!enabled}
-                  className="rounded-full border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-5 pb-4">
-            {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                onResolveProposal={(proposalId, status) =>
-                  resolveProposal(message.id, proposalId, status)
-                }
-              />
-            ))}
-            {activity && (
-              <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="size-3 animate-spin" />
-                {activity}…
-              </p>
-            )}
-            <div ref={bottomRef} />
-          </div>
-        )}
-      </div>
+      <div className="flex min-h-0 flex-1 flex-col">
+        <div className="shrink-0 px-3 pt-3 md:hidden">
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs text-muted-foreground"
+          >
+            <MessagesSquare className="size-3.5" />
+            Conversas
+          </button>
 
-      <div className="shrink-0 pt-3">
-        {!enabled && (
-          <p className="mb-2 text-xs text-muted-foreground">
-            Chat desligado: falta <code>NVIDIA_API_KEY</code> no{" "}
-            <code>.env.local</code>.
-          </p>
-        )}
-        <div className="flex items-end gap-2 rounded-xl border bg-card/40 p-2">
-          <Textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                send(input)
-              }
-            }}
-            disabled={!enabled}
-            placeholder="Pergunte alguma coisa…  (Enter envia, Shift+Enter quebra linha)"
-            // field-sizing-fixed + max-h: sem isso o Textarea do shadcn cresce
-            // sem limite e empurra o botão de enviar para fora da tela.
-            className="field-sizing-fixed max-h-40 min-h-9 resize-none border-0 bg-transparent px-1.5 py-1.5 focus-visible:ring-0"
-            rows={1}
-          />
-          {streaming ? (
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() => abortRef.current?.abort()}
-              aria-label="Parar"
-            >
-              <Square className="size-3.5" />
-            </Button>
-          ) : (
-            <Button
-              size="icon"
-              onClick={() => send(input)}
-              disabled={!enabled || !input.trim()}
-              aria-label="Enviar"
-            >
-              <ArrowUp className="size-4" />
-            </Button>
-          )}
+          <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+            <SheetContent side="left" className="w-72 p-0">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Conversas</SheetTitle>
+                <SheetDescription>Histórico do chat.</SheetDescription>
+              </SheetHeader>
+              <div className="flex h-full flex-col">
+                <ConversationList
+                  threads={threads}
+                  activeId={threadId}
+                  onNavigate={() => setHistoryOpen(false)}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
+
+        {messages.length === 0 ? (
+          <WelcomeScreen
+            enabled={enabled}
+            onPick={send}
+            composer={composer(true, true)}
+          />
+        ) : (
+          <>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4">
+              <div className="mx-auto w-full max-w-3xl space-y-6 pt-8 pb-6">
+                {messages.map((message) => (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    onResolveProposal={(proposalId, status) =>
+                      resolveProposal(message.id, proposalId, status)
+                    }
+                  />
+                ))}
+                {activity && (
+                  <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="size-3 animate-spin" />
+                    {activity}…
+                  </p>
+                )}
+                <div ref={bottomRef} />
+              </div>
+            </div>
+
+            <div className="shrink-0 px-4 pb-4">
+              <div className="mx-auto w-full max-w-3xl">{composer(false)}</div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

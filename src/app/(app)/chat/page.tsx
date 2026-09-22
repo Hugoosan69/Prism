@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/layout/page-header"
 import { ChatView } from "@/components/chat/chat-view"
 import type { Message, ToolCall } from "@/components/chat/types"
 import { createClient } from "@/lib/supabase/server"
@@ -18,7 +17,7 @@ export default async function ChatPage({
     .from("chat_threads")
     .select("id, title, updated_at")
     .order("updated_at", { ascending: false })
-    .limit(15)
+    .limit(50)
 
   let messages: Message[] = []
   if (thread) {
@@ -38,22 +37,13 @@ export default async function ChatPage({
     }))
   }
 
-  // Uma linha só, para saber de relance o que o assistente alcança hoje.
-  const sources = [
-    "Prism",
-    vaultEnabled() ? "Segundo Cérebro" : null,
-    webSearchEnabled() ? "web" : null,
-  ].filter(Boolean)
-
   return (
-    <div>
-      <PageHeader title="Chat" meta={sources.join(" · ")} />
-      <ChatView
-        threads={threads ?? []}
-        threadId={thread ?? null}
-        initialMessages={messages}
-        enabled={chatEnabled()}
-      />
-    </div>
+    <ChatView
+      threads={threads ?? []}
+      threadId={thread ?? null}
+      initialMessages={messages}
+      enabled={chatEnabled()}
+      sources={{ prism: true, cofre: vaultEnabled(), web: webSearchEnabled() }}
+    />
   )
 }
