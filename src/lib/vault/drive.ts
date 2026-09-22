@@ -36,6 +36,7 @@ export class DriveVault implements VaultSource {
   private rootId: string | null = null
   /** Caminho legível por id, montado durante a navegação das pastas. */
   private paths = new Map<string, string>()
+  private notesCache: DriveFile[] | null = null
 
   /**
    * Access token vive uma hora; renovar a cada chamada seria um round-trip a
@@ -134,8 +135,16 @@ export class DriveVault implements VaultSource {
     return this.rootId
   }
 
-  /** Percorre a árvore a partir da raiz, guardando o caminho de cada .md. */
+  /**
+   * Percorre a árvore a partir da raiz, guardando o caminho de cada .md.
+   *
+   * O resultado fica em cache na instância porque cada ferramenta do chat cria
+   * uma instância nova, mas dentro de uma resposta a árvore é percorrida uma
+   * vez só — são várias chamadas à API, uma por pasta.
+   */
   private async allNotes(): Promise<DriveFile[]> {
+    if (this.notesCache) return this.notesCache
+
     const rootId = await this.root()
     const notes: DriveFile[] = []
     const queue: string[] = [rootId]
@@ -160,6 +169,7 @@ export class DriveVault implements VaultSource {
       }
     }
 
+    this.notesCache = notes
     return notes
   }
 
@@ -200,19 +210,31 @@ export class DriveVault implements VaultSource {
 
   async search(query: string, limit = 12): Promise<VaultHit[]> {
     if (!query.trim()) return []
-    await this.root()
 
-    // A API acha os candidatos; o recorte do trecho é nosso.
+    // A árvore do cofre vem primeiro porque ela é o filtro: o `fullText` da API
+    // do Drive varre a conta inteira, e sem isto uma busca por "RLS" traz
+    // arquivo de outro projeto, migration de banco e o que mais existir no
+    // Drive. O cofre é a fonte; o resto da conta não é.
+    const notes = await this.allNotes()
+    const doCofre = new Set(notes.map((n) => n.id))
+
     const candidates = await this.list(
       `fullText contains '${quote(query)}' and trashed = false and mimeType != '${FOLDER_MIME}'`
     )
 
     const needle = query.toLowerCase()
     const hits: VaultHit[] = []
+    const encontrados = candidates.filter((f) => doCofre.has(f.id))
 
-    for (const file of candidates.slice(0, limit)) {
-      if (!file.name.endsWith(".md")) continue
+    // Se o índice de texto do Drive ainda não pegou o termo (arquivo recém
+    // salvo), cai para varrer os nomes das notas do cofre — melhor devolver
+    // pouco do lugar certo do que muito do lugar errado.
+    const alvos =
+      encontrados.length > 0
+        ? encontrados
+        : notes.filter((n) => n.name.toLowerCase().includes(needle))
 
+    for (const file of alvos.slice(0, limit)) {
       const content = await this.download(file.id)
       const at = content.toLowerCase().indexOf(needle)
       const start = at === -1 ? 0 : Math.max(0, at - 160)
