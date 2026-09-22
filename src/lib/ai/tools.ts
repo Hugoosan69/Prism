@@ -59,6 +59,40 @@ const READ_TOOLS: ToolSchema[] = [
   {
     type: "function",
     function: {
+      name: "buscar_nas_conversas",
+      description:
+        "Procura no que já foi conversado em conversas anteriores deste chat. Use quando Hugo se referir a algo que ele já te disse ou que voces já discutiram ('aquilo que falamos', 'o erro de ontem', 'como ficou aquele select'), ou antes de dizer que não sabe de algo.",
+      parameters: {
+        type: "object",
+        properties: {
+          termo: {
+            type: "string",
+            description: "Assunto a procurar. Vazio lista as conversas mais recentes.",
+          },
+          limite: { type: "integer", description: "Padrão 8, máximo 20." },
+        },
+        required: ["termo"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "ler_conversa",
+      description:
+        "Lê uma conversa anterior inteira pelo id devolvido por buscar_nas_conversas, quando o trecho da busca não basta para entender o que foi decidido.",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "thread_id da conversa." },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "ler_item_do_prism",
       description:
         "Lê um item inteiro do Prism pelo id, quando a busca devolveu só um resumo e você precisa do conteúdo completo.",
@@ -393,6 +427,97 @@ async function searchTable(
   return { modulo: table, itens: ordenados }
 }
 
+/**
+ * Busca no histórico das conversas anteriores.
+ *
+ * Duas escolhas de custo moram aqui. A primeira é ignorar `role = 'tool'`: o
+ * resultado bruto de uma ferramenta é ruído para quem procura o que **foi
+ * conversado**, e é justamente a parte mais volumosa da tabela. A segunda é
+ * devolver só o trecho em volta do termo, e não a mensagem inteira — uma
+ * resposta longa sozinha estouraria o teto da rodada.
+ */
+async function searchConversas(supabase: Supabase, termo: string, limite: number) {
+  const palavras = palavrasDe(termo)
+  const or = !termo
+    ? null
+    : palavras.length <= 1
+      ? `content.ilike.%${palavras[0] ?? termo}%`
+      : palavras.map((p) => `content.ilike.%${p}%`).join(",")
+
+  let q = supabase
+    .from("chat_messages")
+    .select("thread_id, role, content, created_at, chat_threads(title)")
+    .in("role", ["user", "assistant"])
+    .neq("content", "")
+    .order("created_at", { ascending: false })
+    .limit(limite * 3)
+  if (or) q = q.or(or)
+
+  const { data, error } = await q
+  if (error) return { erro: error.message }
+
+  const achados = (data ?? []).map((m) => ({
+    conversa: m.thread_id,
+    titulo: m.chat_threads?.title || "(sem título)",
+    quem: m.role === "user" ? "Hugo" : "você",
+    quando: m.created_at.slice(0, 10),
+    trecho: trechoEmVolta(m.content, palavras),
+  }))
+
+  if (palavras.length > 1) {
+    achados.sort(
+      (a, b) =>
+        pontuar(b as unknown as Record<string, unknown>, palavras) -
+        pontuar(a as unknown as Record<string, unknown>, palavras)
+    )
+  }
+  return { mensagens: achados.slice(0, limite) }
+}
+
+/** Janela em volta da primeira palavra encontrada; o começo, se não achar. */
+function trechoEmVolta(conteudo: string, palavras: string[], janela = 400) {
+  if (conteudo.length <= janela) return conteudo
+
+  const baixo = conteudo.toLowerCase()
+  const pos = palavras
+    .map((p) => baixo.indexOf(p))
+    .filter((i) => i >= 0)
+    .sort((a, b) => a - b)[0]
+  if (pos === undefined) return `${conteudo.slice(0, janela)}\n[...]`
+
+  const inicio = Math.max(0, pos - janela / 4)
+  const fim = Math.min(conteudo.length, inicio + janela)
+  return `${inicio > 0 ? "[...] " : ""}${conteudo.slice(inicio, fim)}${fim < conteudo.length ? " [...]" : ""}`
+}
+
+async function readConversa(supabase: Supabase, id: string) {
+  const { data: thread } = await supabase
+    .from("chat_threads")
+    .select("title, created_at")
+    .eq("id", id)
+    .maybeSingle()
+  if (!thread) return { erro: "Conversa não encontrada." }
+
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("role, content, created_at")
+    .eq("thread_id", id)
+    .in("role", ["user", "assistant"])
+    .neq("content", "")
+    .order("created_at", { ascending: true })
+    .limit(40)
+  if (error) return { erro: error.message }
+
+  return {
+    titulo: thread.title || "(sem título)",
+    quando: thread.created_at.slice(0, 10),
+    mensagens: (data ?? []).map((m) => ({
+      quem: m.role === "user" ? "Hugo" : "você",
+      texto: cortar(m.content, 900),
+    })),
+  }
+}
+
 async function readItem(supabase: Supabase, table: ModuleTable, id: string) {
   switch (table) {
     case "snippets":
@@ -536,6 +661,18 @@ export async function runReadTool(
         const table = TABLE[tipo]
         if (!table) return { erro: `Tipo desconhecido: ${tipo}` }
         return await searchTable(supabase, table, termo, limite, status)
+      }
+
+      case "buscar_nas_conversas": {
+        return await searchConversas(
+          supabase,
+          String(args.termo ?? ""),
+          Math.min(Number(args.limite) || 8, 20)
+        )
+      }
+
+      case "ler_conversa": {
+        return await readConversa(supabase, String(args.id ?? ""))
       }
 
       case "ler_item_do_prism": {
