@@ -1,8 +1,11 @@
 /**
- * Configuração do chat de IA. Diferente de lib/supabase/config.ts, aqui **nada**
- * tem padrão versionado: a chave do modelo é paga, as do Google dão acesso ao
- * Drive, e o repositório é público. Sem a variável de ambiente o recurso se
- * desliga e a tela diz o motivo, em vez de estourar no meio de uma resposta.
+ * Padrão de fábrica do chat de IA. **Nada** aqui tem valor versionado: a chave
+ * do modelo é paga, as do Google dão acesso ao Drive, e o repositório é público.
+ *
+ * Provedor, modelo e chaves podem ser trocados pela tela de Configurações, e o
+ * que estiver no banco vence — ver `lib/ai/settings.ts`. Estes valores são o
+ * que vale quando o banco não diz nada, e é o que mantém o app subindo sem
+ * configuração nenhuma.
  */
 
 /**
@@ -58,9 +61,6 @@ export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET ?? ""
 export const GOOGLE_REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN ?? ""
 export const GOOGLE_VAULT_FOLDER =
   process.env.GOOGLE_VAULT_FOLDER ?? "Obsidian/SEGUNDO CÉREBRO"
-
-export const chatEnabled = () => AI_API_KEY.length > 0
-export const webSearchEnabled = () => TAVILY_API_KEY.length > 0
 
 export const driveVaultEnabled = () =>
   GOOGLE_CLIENT_ID.length > 0 &&

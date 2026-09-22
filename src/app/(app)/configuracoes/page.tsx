@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { Brain, LogOut } from "lucide-react"
+import { Bot, Brain, LogOut } from "lucide-react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
+import { AiSettingsForm } from "@/components/chat/ai-settings-form"
 import { MemoryManager } from "@/components/chat/memory-manager"
 import { createClient } from "@/lib/supabase/client"
 
@@ -227,6 +228,19 @@ export default function ConfiguracoesPage() {
               {savingPassword ? "Salvando..." : "Alterar senha"}
             </Button>
           </form>
+        </section>
+
+        {/* Motor do chat: trocar modelo ou chave sem passar por deploy. */}
+        <section className="space-y-3">
+          <SectionTitle>Chat de IA</SectionTitle>
+          <div className="space-y-4 rounded-xl border bg-card p-5">
+            <p className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Bot className="mt-0.5 size-3.5 shrink-0" />
+              Vale a partir da próxima mensagem. Campo em branco mantém o que já
+              está valendo.
+            </p>
+            <AiSettingsForm />
+          </div>
         </section>
 
         {/* O que o assistente aprendeu: fica aqui porque entra no prompt de

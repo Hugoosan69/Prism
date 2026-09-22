@@ -1,7 +1,8 @@
 import { ChatView } from "@/components/chat/chat-view"
 import type { Message, ToolCall } from "@/components/chat/types"
 import { createClient } from "@/lib/supabase/server"
-import { chatEnabled, vaultEnabled, webSearchEnabled } from "@/lib/ai/config"
+import { vaultEnabled } from "@/lib/ai/config"
+import { carregarSettings } from "@/lib/ai/settings"
 
 export const dynamic = "force-dynamic"
 
@@ -12,6 +13,7 @@ export default async function ChatPage({
 }) {
   const { thread } = await searchParams
   const supabase = await createClient()
+  const settings = await carregarSettings(supabase)
 
   const { data: threads } = await supabase
     .from("chat_threads")
@@ -42,8 +44,12 @@ export default async function ChatPage({
       threads={threads ?? []}
       threadId={thread ?? null}
       initialMessages={messages}
-      enabled={chatEnabled()}
-      sources={{ prism: true, cofre: vaultEnabled(), web: webSearchEnabled() }}
+      enabled={Boolean(settings.apiKey)}
+      sources={{
+        prism: true,
+        cofre: vaultEnabled(),
+        web: Boolean(settings.tavilyKey),
+      }}
     />
   )
 }

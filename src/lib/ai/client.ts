@@ -9,7 +9,8 @@
  * nenhum fornecedor: o Prism já trocou duas vezes em um dia.
  */
 
-import { AI_API_KEY, AI_BASE_URL, AI_MODEL, MAX_TOKENS } from "./config"
+import { MAX_TOKENS } from "./config"
+import type { AiSettings } from "./settings"
 
 export type ToolCall = {
   id: string
@@ -53,7 +54,7 @@ export class ModelError extends Error {
   }
 }
 
-function explicar(status: number, corpo: string): string {
+function explicar(status: number, corpo: string, modelo: string): string {
   if (status === 429) {
     return (
       "O provedor recusou por limite de uso ou saldo. Se a conta tiver " +
@@ -61,10 +62,10 @@ function explicar(status: number, corpo: string): string {
     )
   }
   if (status === 401 || status === 403) {
-    return "A chave da API do modelo foi recusada. Confira OPENAI_API_KEY."
+    return "A chave da API do modelo foi recusada. Confira a chave em Configurações."
   }
   if (status === 404) {
-    return `O modelo "${AI_MODEL}" não existe nesse provedor.`
+    return `O modelo "${modelo}" não existe nesse provedor.`
   }
   return `O provedor do modelo respondeu ${status}: ${corpo.slice(0, 300)}`
 }
@@ -80,17 +81,18 @@ function explicar(status: number, corpo: string): string {
 export async function* streamChat(
   messages: ChatMessage[],
   tools: ToolSchema[],
+  settings: AiSettings,
   signal?: AbortSignal
 ): AsyncGenerator<StreamChunk> {
-  const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
+  const response = await fetch(`${settings.baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${AI_API_KEY}`,
+      Authorization: `Bearer ${settings.apiKey}`,
     },
     signal,
     body: JSON.stringify({
-      model: AI_MODEL,
+      model: settings.model,
       messages,
       temperature: 1,
       top_p: 0.95,
@@ -105,7 +107,10 @@ export async function* streamChat(
 
   if (!response.ok || !response.body) {
     const detail = await response.text().catch(() => "")
-    throw new ModelError(explicar(response.status, detail), response.status)
+    throw new ModelError(
+      explicar(response.status, detail, settings.model),
+      response.status
+    )
   }
 
   const reader = response.body.getReader()

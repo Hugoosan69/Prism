@@ -12,11 +12,8 @@
 
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import {
-  chatEnabled,
-  LIMITE_HISTORICO,
-  MAX_TOOL_ROUNDS,
-} from "@/lib/ai/config"
+import { LIMITE_HISTORICO, MAX_TOOL_ROUNDS } from "@/lib/ai/config"
+import { carregarSettings } from "@/lib/ai/settings"
 import { montarPrompt } from "@/lib/ai/prompt"
 import { streamChat, type ChatMessage, type ToolCall } from "@/lib/ai/client"
 import {
@@ -47,13 +44,6 @@ type Incoming = {
 }
 
 export async function POST(request: NextRequest) {
-  if (!chatEnabled()) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY não configurada. Ver .env.example." },
-      { status: 503 }
-    )
-  }
-
   const supabase = await createClient()
   const {
     data: { user },
@@ -80,6 +70,15 @@ export async function POST(request: NextRequest) {
   // Só as mensagens recentes vão para o modelo. O limite de entrada do
   // plano é por minuto, e uma conversa longa passaria dele sozinha; a
   // conversa inteira continua na tela e no banco.
+  // Provedor, modelo e chaves vêm do banco, com a env como padrão de fábrica.
+  const settings = await carregarSettings(supabase)
+  if (!settings.apiKey) {
+    return NextResponse.json(
+      { error: "Sem chave de API do modelo. Configure em Configurações." },
+      { status: 503 }
+    )
+  }
+
   const recentes = history.slice(-LIMITE_HISTORICO)
 
   // A memória entra no prompt de toda pergunta: é o que o assistente "já sabe"
@@ -108,7 +107,7 @@ export async function POST(request: NextRequest) {
   ]
 
   const encoder = new TextEncoder()
-  const tools = availableTools()
+  const tools = availableTools(Boolean(settings.tavilyKey))
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -124,6 +123,7 @@ export async function POST(request: NextRequest) {
           for await (const chunk of streamChat(
             messages,
             tools,
+            settings,
             request.signal
           )) {
             if (chunk.type === "reasoning") {
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
             }
 
             send({ type: "tool", name, status: "running" })
-            const result = await runReadTool(name, args, supabase)
+            const result = await runReadTool(name, args, supabase, settings)
             send({ type: "tool", name, status: "done" })
 
             messages.push({

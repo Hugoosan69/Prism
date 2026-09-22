@@ -300,6 +300,33 @@ export type Database = {
         }
         Relationships: []
       }
+      settings: {
+        Row: {
+          ai_api_key: string
+          ai_base_url: string
+          ai_model: string
+          id: boolean
+          tavily_api_key: string
+          updated_at: string
+        }
+        Insert: {
+          ai_api_key?: string
+          ai_base_url?: string
+          ai_model?: string
+          id?: boolean
+          tavily_api_key?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_api_key?: string
+          ai_base_url?: string
+          ai_model?: string
+          id?: boolean
+          tavily_api_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       snippets: {
         Row: {
           category: string

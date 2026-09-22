@@ -18,10 +18,9 @@ import type { ToolSchema } from "./client"
 import {
   LIMITE_RESULTADO_FERRAMENTA,
   LIMITE_TEXTO_LONGO,
-  TAVILY_API_KEY,
   vaultEnabled,
-  webSearchEnabled,
 } from "./config"
+import type { AiSettings } from "./settings"
 import { getVault } from "@/lib/vault"
 
 const READ_TOOLS: ToolSchema[] = [
@@ -252,11 +251,11 @@ export const WRITE_TOOL_NAMES = new Set(
   WRITE_TOOLS.map((t) => t.function.name)
 )
 
-export function availableTools(): ToolSchema[] {
+export function availableTools(temWeb: boolean): ToolSchema[] {
   return [
     ...READ_TOOLS,
     ...(vaultEnabled() ? VAULT_TOOLS : []),
-    ...(webSearchEnabled() ? WEB_TOOLS : []),
+    ...(temWeb ? WEB_TOOLS : []),
     ...WRITE_TOOLS,
   ]
 }
@@ -407,12 +406,12 @@ async function readItem(supabase: Supabase, table: ModuleTable, id: string) {
   }
 }
 
-async function webSearch(consulta: string, limite: number) {
+async function webSearch(consulta: string, limite: number, chave: string) {
   const response = await fetch("https://api.tavily.com/search", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${TAVILY_API_KEY}`,
+      Authorization: `Bearer ${chave}`,
     },
     body: JSON.stringify({
       query: consulta,
@@ -514,7 +513,8 @@ function compactarIndice(conteudo: string) {
 export async function runReadTool(
   name: string,
   args: Record<string, unknown>,
-  supabase: Supabase
+  supabase: Supabase,
+  settings: AiSettings
 ): Promise<unknown> {
   try {
     switch (name) {
@@ -593,12 +593,13 @@ export async function runReadTool(
       }
 
       case "buscar_na_web": {
-        if (!webSearchEnabled()) {
+        if (!settings.tavilyKey) {
           return { erro: "Busca na web não está configurada." }
         }
         return await webSearch(
           String(args.consulta ?? ""),
-          Math.min(Number(args.limite) || 5, 10)
+          Math.min(Number(args.limite) || 5, 10),
+          settings.tavilyKey
         )
       }
 
