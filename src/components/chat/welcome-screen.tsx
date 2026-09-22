@@ -67,7 +67,7 @@ export function WelcomeScreen({
 
         {!enabled ? (
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            O chat está desligado: falta <code>NVIDIA_API_KEY</code> nas
+            O chat está desligado: falta <code>OPENAI_API_KEY</code> nas
             variáveis de ambiente.
           </p>
         ) : (

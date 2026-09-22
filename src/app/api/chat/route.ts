@@ -2,7 +2,7 @@
  * A única rota de API do Prism.
  *
  * O resto do app fala com o Supabase direto do client, sem camada de API — mas
- * a chave da NVIDIA não pode existir no navegador, então o chat precisa de um
+ * a chave do modelo não pode existir no navegador, então o chat precisa de um
  * servidor. A exceção começa e termina aqui.
  *
  * Devolve um stream de linhas JSON (NDJSON) em vez de SSE: o consumidor é um
@@ -12,10 +12,19 @@
 
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { chatEnabled, MAX_TOOL_ROUNDS } from "@/lib/ai/config"
+import {
+  chatEnabled,
+  LIMITE_HISTORICO,
+  MAX_TOOL_ROUNDS,
+} from "@/lib/ai/config"
 import { SYSTEM_PROMPT } from "@/lib/ai/prompt"
-import { streamChat, type ChatMessage, type ToolCall } from "@/lib/ai/nvidia"
-import { availableTools, runReadTool, WRITE_TOOL_NAMES } from "@/lib/ai/tools"
+import { streamChat, type ChatMessage, type ToolCall } from "@/lib/ai/client"
+import {
+  availableTools,
+  runReadTool,
+  serializarResultado,
+  WRITE_TOOL_NAMES,
+} from "@/lib/ai/tools"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -39,7 +48,7 @@ type Incoming = {
 export async function POST(request: NextRequest) {
   if (!chatEnabled()) {
     return NextResponse.json(
-      { error: "NVIDIA_API_KEY não configurada. Ver .env.example." },
+      { error: "OPENAI_API_KEY não configurada. Ver .env.example." },
       { status: 503 }
     )
   }
@@ -50,7 +59,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // O middleware já protege as páginas, mas ele não cobre /api — sem esta
-  // checagem a rota seria um proxy aberto para a chave da NVIDIA.
+  // checagem a rota seria um proxy aberto para a chave do modelo.
   if (!user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 })
   }
@@ -67,9 +76,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Sem mensagens." }, { status: 400 })
   }
 
+  // Só as mensagens recentes vão para o modelo. O limite de entrada do
+  // plano é por minuto, e uma conversa longa passaria dele sozinha; a
+  // conversa inteira continua na tela e no banco.
+  const recentes = history.slice(-LIMITE_HISTORICO)
+
   const messages: ChatMessage[] = [
     { role: "system", content: SYSTEM_PROMPT },
-    ...history.map((m): ChatMessage => {
+    ...recentes.map((m): ChatMessage => {
       if (m.role === "tool") {
         return {
           role: "tool",
@@ -163,7 +177,7 @@ export async function POST(request: NextRequest) {
             messages.push({
               role: "tool",
               tool_call_id: call.id,
-              content: JSON.stringify(result).slice(0, 60000),
+              content: serializarResultado(result),
             })
           }
         }

@@ -1,12 +1,15 @@
 /**
- * Cliente da API da NVIDIA (endpoint compatível com o formato da OpenAI).
+ * Cliente do modelo de linguagem.
  *
- * Feito com fetch puro de propósito: o SDK `openai` traria uma árvore de
- * dependências inteira para o que aqui é um POST e um parser de SSE. Se um dia
- * precisarmos de mais do que chat completions, a troca é isolada neste arquivo.
+ * Fala com qualquer endpoint no formato da OpenAI — hoje a própria OpenAI.
+ * Feito com
+ * fetch puro de propósito: o SDK traria uma árvore de dependências inteira para
+ * o que aqui é um POST e um parser de SSE. Trocar de provedor é mexer nas três
+ * constantes de `config.ts`, e foi por isso que este arquivo não tem o nome de
+ * nenhum fornecedor: o Prism já trocou duas vezes em um dia.
  */
 
-import { NVIDIA_API_KEY, NVIDIA_BASE_URL, NVIDIA_MODEL } from "./config"
+import { AI_API_KEY, AI_BASE_URL, AI_MODEL, MAX_TOKENS } from "./config"
 
 export type ToolCall = {
   id: string
@@ -40,6 +43,32 @@ type DeltaToolCall = {
   function?: { name?: string; arguments?: string }
 }
 
+/** Erro que a rota traduz para uma frase útil na tela. */
+export class ModelError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message)
+  }
+}
+
+function explicar(status: number, corpo: string): string {
+  if (status === 429) {
+    return (
+      "O provedor recusou por limite de uso ou saldo. Se a conta tiver " +
+      "crédito, é só tentar de novo em alguns segundos."
+    )
+  }
+  if (status === 401 || status === 403) {
+    return "A chave da API do modelo foi recusada. Confira OPENAI_API_KEY."
+  }
+  if (status === 404) {
+    return `O modelo "${AI_MODEL}" não existe nesse provedor.`
+  }
+  return `O provedor do modelo respondeu ${status}: ${corpo.slice(0, 300)}`
+}
+
 /**
  * Faz uma rodada de chat com streaming.
  *
@@ -53,30 +82,27 @@ export async function* streamChat(
   tools: ToolSchema[],
   signal?: AbortSignal
 ): AsyncGenerator<StreamChunk> {
-  const response = await fetch(`${NVIDIA_BASE_URL}/chat/completions`, {
+  const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${NVIDIA_API_KEY}`,
+      Authorization: `Bearer ${AI_API_KEY}`,
     },
     signal,
     body: JSON.stringify({
-      model: NVIDIA_MODEL,
+      model: AI_MODEL,
       messages,
       temperature: 1,
       top_p: 0.95,
-      max_tokens: 16384,
+      max_tokens: MAX_TOKENS,
       stream: true,
       ...(tools.length > 0 ? { tools, tool_choice: "auto" } : {}),
-      chat_template_kwargs: { enable_thinking: true },
     }),
   })
 
   if (!response.ok || !response.body) {
     const detail = await response.text().catch(() => "")
-    throw new Error(
-      `NVIDIA respondeu ${response.status}: ${detail.slice(0, 500)}`
-    )
+    throw new ModelError(explicar(response.status, detail), response.status)
   }
 
   const reader = response.body.getReader()
@@ -90,7 +116,7 @@ export async function* streamChat(
 
     buffer += decoder.decode(value, { stream: true })
 
-    // SSE separa eventos por linha em branco, mas a NVIDIA manda um "data:" por
+    // SSE separa eventos por linha em branco, mas o que chega é um "data:" por
     // linha; quebrar por \n e ignorar o resto é suficiente e mais tolerante.
     const lines = buffer.split("\n")
     buffer = lines.pop() ?? ""
@@ -106,6 +132,8 @@ export async function* streamChat(
         choices?: {
           delta?: {
             content?: string | null
+            /** Nomes usados por provedores diferentes para o mesmo campo. */
+            reasoning?: string | null
             reasoning_content?: string | null
             tool_calls?: DeltaToolCall[]
           }
@@ -122,8 +150,9 @@ export async function* streamChat(
       const delta = parsed.choices?.[0]?.delta
       if (!delta) continue
 
-      if (delta.reasoning_content) {
-        yield { type: "reasoning", text: delta.reasoning_content }
+      const pensamento = delta.reasoning ?? delta.reasoning_content
+      if (pensamento) {
+        yield { type: "reasoning", text: pensamento }
       }
       if (delta.content) {
         yield { type: "content", text: delta.content }

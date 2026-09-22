@@ -14,8 +14,14 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
-import type { ToolSchema } from "./nvidia"
-import { TAVILY_API_KEY, vaultEnabled, webSearchEnabled } from "./config"
+import type { ToolSchema } from "./client"
+import {
+  LIMITE_RESULTADO_FERRAMENTA,
+  LIMITE_TEXTO_LONGO,
+  TAVILY_API_KEY,
+  vaultEnabled,
+  webSearchEnabled,
+} from "./config"
 import { getVault } from "@/lib/vault"
 
 const READ_TOOLS: ToolSchema[] = [
@@ -36,7 +42,14 @@ const READ_TOOLS: ToolSchema[] = [
           },
           termo: {
             type: "string",
-            description: "Texto a procurar. Vazio devolve os mais recentes.",
+            description:
+              "Texto a procurar. Deixe vazio para listar sem filtrar — é o que você quer em perguntas como 'o que está pendente?'.",
+          },
+          status: {
+            type: "string",
+            enum: ["todo", "doing", "waiting", "done", "pendentes"],
+            description:
+              "Só para tarefas. 'pendentes' = todo + doing, o que depende do Hugo agora. 'waiting' = esperando terceiros.",
           },
           limite: { type: "integer", description: "Padrão 10, máximo 30." },
         },
@@ -254,9 +267,13 @@ async function searchTable(
   supabase: Supabase,
   table: ModuleTable,
   termo: string,
-  limite: number
+  limite: number,
+  status?: string
 ) {
   const or = termo ? orFilter(table, termo) : null
+  // "pendentes" não é um status do banco: é o par que depende de Hugo agora.
+  const estados =
+    status === "pendentes" ? ["todo", "doing"] : status ? [status] : null
 
   const run = async () => {
     switch (table) {
@@ -275,10 +292,12 @@ async function searchTable(
         return or ? await q.or(or) : await q
       }
       case "tasks": {
-        const q = supabase
+        let q = supabase
           .from("tasks")
           .select("id, title, description, status, priority, tags, due_date")
+          .order("position", { ascending: true })
           .limit(limite)
+        if (estados) q = q.in("status", estados)
         return or ? await q.or(or) : await q
       }
       case "links": {
@@ -343,6 +362,51 @@ async function webSearch(consulta: string, limite: number) {
   }
 }
 
+/** Corta texto longo preservando o começo, que é onde mora o assunto. */
+function cortar(texto: string, teto = LIMITE_TEXTO_LONGO) {
+  return texto.length > teto ? `${texto.slice(0, teto)}\n[...]` : texto
+}
+
+/**
+ * Compacta um índice do cofre para as linhas que importam.
+ *
+ * Os `_INDICE-*.md` são tabelas de "nota | resumo | projetos | data" cercadas
+ * de frontmatter, títulos e comentários. Mandar os oito inteiros custava mais
+ * de 8 mil tokens — sozinho acima do limite de entrada do plano. O que o modelo
+ * precisa para decidir qual nota abrir são as linhas da tabela.
+ */
+function compactarIndice(conteudo: string) {
+  const linhas = conteudo
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(
+      (l) =>
+        l.startsWith("|") &&
+        !l.startsWith("|---") &&
+        !/^\|\s*Nota\s*\|/i.test(l)
+    )
+    // Só nome e resumo: as colunas de projeto e data da tabela não ajudam a
+    // decidir qual nota abrir, e somadas custam um terço do orçamento.
+    .map((l) => {
+      const celulas = l.split("|").map((c) => c.trim()).filter(Boolean)
+      const nome = (celulas[0] ?? "").replace(/\[\[|\]\]/g, "")
+      const resumo = celulas[1] ?? ""
+      return resumo ? `${nome} — ${resumo}` : nome
+    })
+
+  if (linhas.length === 0) {
+    // Índice sem tabela (o mestre tem listas): manda o corpo cortado.
+    return cortar(
+      conteudo
+        .split("\n")
+        .filter((l) => !l.startsWith("<!--") && l.trim())
+        .join("\n"),
+      1200
+    )
+  }
+  return linhas.join("\n")
+}
+
 /**
  * Executa uma ferramenta de leitura e devolve o que volta para o modelo.
  *
@@ -360,6 +424,7 @@ export async function runReadTool(
       case "buscar_no_prism": {
         const tipo = String(args.tipo ?? "tudo")
         const termo = String(args.termo ?? "")
+        const status = args.status ? String(args.status) : undefined
         const limite = Math.min(Number(args.limite) || 10, 30)
 
         if (tipo === "tudo") {
@@ -373,7 +438,7 @@ export async function runReadTool(
 
         const table = TABLE[tipo]
         if (!table) return { erro: `Tipo desconhecido: ${tipo}` }
-        return await searchTable(supabase, table, termo, limite)
+        return await searchTable(supabase, table, termo, limite, status)
       }
 
       case "ler_item_do_prism": {
@@ -397,7 +462,12 @@ export async function runReadTool(
         if (notes.length === 0) {
           return { erro: "Nenhum índice encontrado no cofre." }
         }
-        return { indices: notes }
+        return {
+          indices: notes.map((n) => ({
+            path: n.path,
+            linhas: compactarIndice(n.content),
+          })),
+        }
       }
 
       case "cofre_buscar": {
@@ -406,9 +476,14 @@ export async function runReadTool(
 
         const hits = await vault.search(
           String(args.termo ?? ""),
-          Math.min(Number(args.limite) || 12, 25)
+          Math.min(Number(args.limite) || 8, 15)
         )
-        return { ocorrencias: hits }
+        return {
+          ocorrencias: hits.map((h) => ({
+            path: h.path,
+            excerpt: cortar(h.excerpt, 400),
+          })),
+        }
       }
 
       case "cofre_ler": {
@@ -416,7 +491,8 @@ export async function runReadTool(
         if (!vault) return { erro: "Cofre não configurado." }
 
         const note = await vault.readNote(String(args.caminho ?? ""))
-        return note ?? { erro: "Nota não encontrada ou fora do cofre." }
+        if (!note) return { erro: "Nota não encontrada ou fora do cofre." }
+        return { path: note.path, content: cortar(note.content, 3500) }
       }
 
       case "buscar_na_web": {
@@ -437,4 +513,15 @@ export async function runReadTool(
       erro: error instanceof Error ? error.message : "Falha ao executar.",
     }
   }
+}
+
+/**
+ * Serializa o resultado com teto de tamanho. O corte fica aqui, num lugar só,
+ * porque o limite é de entrada do modelo — vale para qualquer ferramenta,
+ * inclusive as que vierem depois.
+ */
+export function serializarResultado(resultado: unknown) {
+  const texto = JSON.stringify(resultado)
+  if (texto.length <= LIMITE_RESULTADO_FERRAMENTA) return texto
+  return `${texto.slice(0, LIMITE_RESULTADO_FERRAMENTA)}…" [resultado cortado por tamanho]`
 }

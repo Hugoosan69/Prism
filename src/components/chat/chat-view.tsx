@@ -23,7 +23,7 @@ type Props = {
   threads: ThreadSummary[]
   threadId: string | null
   initialMessages: Message[]
-  /** Falso quando NVIDIA_API_KEY não existe; a tela explica em vez de quebrar. */
+  /** Falso quando a chave do modelo não existe; a tela explica em vez de quebrar. */
   enabled: boolean
   sources: { prism: boolean; cofre: boolean; web: boolean }
 }

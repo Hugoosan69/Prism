@@ -14,7 +14,7 @@ npm run dev
 ```
 
 Copie `.env.example` para `.env.local`. As duas variáveis do Supabase são opcionais (há padrão
-no código); `NVIDIA_API_KEY` é o que liga o chat, e sem ela a tela abre desligada em vez de quebrar.
+no código); `OPENAI_API_KEY` é o que liga o chat, e sem ela a tela abre desligada em vez de quebrar.
 
 O chat lê o cofre Obsidian pela API do Google Drive. Para ligar essa parte, rode uma vez
 `node scripts/drive-auth.mjs`: ele abre o consentimento do Google e imprime o refresh token.
