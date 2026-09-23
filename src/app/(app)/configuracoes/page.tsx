@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tabs"
 import { AgentInstructionsForm } from "@/components/chat/agent-instructions-form"
 import { AiSettingsForm } from "@/components/chat/ai-settings-form"
+import { DirectActionSwitch } from "@/components/chat/direct-action-switch"
 import { VaultSettingsForm } from "@/components/chat/vault-settings-form"
 import { MemoryManager } from "@/components/chat/memory-manager"
 import { createClient } from "@/lib/supabase/client"
@@ -152,6 +153,13 @@ export default function ConfiguracoesPage() {
                 isto vence.
               </p>
               <AgentInstructionsForm />
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <SectionTitle>Ação direta</SectionTitle>
+            <div className="rounded-xl border bg-card p-5">
+              <DirectActionSwitch />
             </div>
           </section>
 

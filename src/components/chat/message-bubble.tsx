@@ -17,7 +17,7 @@ export function MessageBubble({
   pending?: boolean
   /** Resposta desta sessão: aparece sendo digitada. Histórico aparece pronto. */
   animate?: boolean
-  onResolveProposal: (id: string, status: "aceita" | "recusada") => void
+  onResolveProposal: (id: string, status: "aceita" | "recusada" | "desfeita") => void
 }) {
   const [showReasoning, setShowReasoning] = useState(false)
   const [copied, setCopied] = useState(false)

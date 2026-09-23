@@ -23,6 +23,7 @@ import {
   serializarResultado,
   WRITE_TOOL_NAMES,
 } from "@/lib/ai/tools"
+import { ehFonteExterna, executarEscrita, type Efeito } from "@/lib/ai/escrever"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -33,6 +34,14 @@ type Event =
   | { type: "content"; text: string }
   | { type: "tool"; name: string; status: "running" | "done" }
   | { type: "proposal"; id: string; tool: string; args: Record<string, unknown> }
+  | {
+      type: "executed"
+      id: string
+      tool: string
+      args: Record<string, unknown>
+      resumo: string
+      desfazer: Efeito["desfazer"]
+    }
   | { type: "error"; message: string }
   | { type: "done" }
 
@@ -112,6 +121,11 @@ export async function POST(request: NextRequest) {
   const encoder = new TextEncoder()
   const tools = availableTools(settings)
 
+  // Vale para a resposta inteira, não só para a rodada: uma vez que texto de
+  // fora entrou no contexto, ele continua lá nas rodadas seguintes, e com ele
+  // a chance de uma instrução plantada. Liga uma vez, não desliga mais.
+  let tocouFonteExterna = false
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (event: Event) => {
@@ -165,7 +179,45 @@ export async function POST(request: NextRequest) {
             }
 
             if (WRITE_TOOL_NAMES.has(name)) {
-              // Escrita não acontece no servidor: vira card de confirmação.
+              // Escreve sozinho só quando as duas condições valem: Hugo ligou a
+              // ação direta E nada nesta resposta veio de fora. Uma página da
+              // web ou uma nota do cofre podem conter texto escrito por outra
+              // pessoa, e é aí que uma frase plantada viraria comando.
+              if (settings.acaoDireta && !tocouFonteExterna) {
+                try {
+                  const efeito = await executarEscrita(supabase, name, args)
+                  if (efeito) {
+                    send({
+                      type: "executed",
+                      id: call.id,
+                      tool: name,
+                      args,
+                      resumo: efeito.resumo,
+                      desfazer: efeito.desfazer,
+                    })
+                    messages.push({
+                      role: "tool",
+                      tool_call_id: call.id,
+                      content: JSON.stringify({
+                        status: `Gravado. ${efeito.resumo}. Pode falar disso no passado.`,
+                      }),
+                    })
+                    continue
+                  }
+                } catch (erro) {
+                  // Falhou a gravação: cai no card, para Hugo decidir, em vez
+                  // de a resposta morrer.
+                  send({
+                    type: "error",
+                    message:
+                      erro instanceof Error
+                        ? `Não deu para gravar: ${erro.message}`
+                        : "Não deu para gravar.",
+                  })
+                }
+              }
+
+              // Sem ação direta, ou depois de ler fonte externa: vira card.
               send({ type: "proposal", id: call.id, tool: name, args })
               messages.push({
                 role: "tool",
@@ -179,6 +231,7 @@ export async function POST(request: NextRequest) {
             }
 
             send({ type: "tool", name, status: "running" })
+            if (ehFonteExterna(name)) tocouFonteExterna = true
             const result = await runReadTool(name, args, supabase, settings)
             send({ type: "tool", name, status: "done" })
 

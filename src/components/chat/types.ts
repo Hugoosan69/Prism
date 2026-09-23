@@ -6,12 +6,24 @@ export type ToolCall = {
   function: { name: string; arguments: string }
 }
 
+/** Como desfazer o que o assistente gravou sozinho. */
+export type Desfazer =
+  | { tipo: "apagar"; tabela: "tasks" | "notes" | "snippets" | "links"; id: string }
+  | { tipo: "restaurar_nota"; id: string; conteudo: string; titulo: string }
+  | { tipo: "nenhum" }
+
 export type Proposal = {
   id: string
   tool: string
   args: Record<string, unknown>
-  /** Vira "aceita" ou "recusada" depois que Hugo decide; card fica no lugar. */
-  status: "pendente" | "aceita" | "recusada"
+  /**
+   * "pendente" espera Hugo. "feita" é ação direta: já está no banco, e o card
+   * serve para ele ver o que aconteceu e poder desfazer.
+   */
+  status: "pendente" | "aceita" | "recusada" | "feita" | "desfeita"
+  /** Só em "feita": o que a escrita produziu e como voltar atrás. */
+  resumo?: string
+  desfazer?: Desfazer
 }
 
 export type Message = {
@@ -31,6 +43,14 @@ export type StreamEvent =
   | { type: "content"; text: string }
   | { type: "tool"; name: string; status: "running" | "done" }
   | { type: "proposal"; id: string; tool: string; args: Record<string, unknown> }
+  | {
+      type: "executed"
+      id: string
+      tool: string
+      args: Record<string, unknown>
+      resumo: string
+      desfazer: Desfazer
+    }
   | { type: "error"; message: string }
   | { type: "done" }
 

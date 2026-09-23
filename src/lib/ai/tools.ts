@@ -319,6 +319,19 @@ export const WRITE_TOOL_NAMES = new Set(
   WRITE_TOOLS.map((t) => t.function.name)
 )
 
+/**
+ * Ferramentas que trazem texto escrito por terceiros.
+ *
+ * Derivado dos grupos, e não de uma lista à mão: ferramenta nova de cofre ou de
+ * web passa a contar como externa sozinha. Uma lista manual aqui envelheceria
+ * em silêncio, e o que ela protege é a decisão de gravar sem confirmação.
+ *
+ * O Prism e as conversas ficam de fora porque o que está lá Hugo escreveu.
+ */
+export const EXTERNAL_TOOL_NAMES = new Set(
+  [...VAULT_TOOLS, ...WEB_TOOLS].map((t) => t.function.name)
+)
+
 export function availableTools(settings: AiSettings): ToolSchema[] {
   return [
     ...READ_TOOLS,

@@ -27,6 +27,8 @@ export type AiSettings = {
   tavilyKey: string
   /** Diretriz escrita por Hugo. Vazio = só a personalidade de partida vale. */
   instructions: string
+  /** Grava sem passar pelo card, quando a rodada não tocou fonte externa. */
+  acaoDireta: boolean
   /** Credenciais do Drive para ler o cofre. Ver `drive` mais abaixo. */
   drive: DriveSettings
 }
@@ -44,6 +46,7 @@ export const PADRAO: AiSettings = {
   apiKey: AI_API_KEY,
   tavilyKey: TAVILY_API_KEY,
   instructions: "",
+  acaoDireta: false,
   drive: {
     clientId: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
@@ -76,9 +79,11 @@ export async function carregarSettings(
   try {
     const { data } = await supabase
       .from("settings")
-      // Literal única, sem concatenar: o supabase-js tipa a linha a partir do
-      // texto do select, e uma soma de strings devolve o tipo de erro genérico.
-      .select("ai_base_url, ai_model, ai_api_key, tavily_api_key, ai_instructions, drive_app_id, drive_app_secret, drive_renewal, drive_folder")
+      // `*` e não a lista de colunas: assim uma migration ainda não aplicada
+      // tira **um** campo do ar em vez de derrubar a leitura inteira. Com a
+      // lista, uma coluna que falta faz o select falhar, tudo cai para a env —
+      // e como as credenciais do cofre agora moram aqui, o cofre iria junto.
+      .select("*")
       .maybeSingle()
 
     if (!data) return PADRAO
@@ -89,6 +94,7 @@ export async function carregarSettings(
       apiKey: data.ai_api_key?.trim() || PADRAO.apiKey,
       tavilyKey: data.tavily_api_key?.trim() || PADRAO.tavilyKey,
       instructions: data.ai_instructions?.trim() ?? "",
+      acaoDireta: data.acao_direta ?? false,
       drive: {
         clientId: data.drive_app_id?.trim() || PADRAO.drive.clientId,
         clientSecret: data.drive_app_secret?.trim() || PADRAO.drive.clientSecret,

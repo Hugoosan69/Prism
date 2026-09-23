@@ -248,6 +248,17 @@ export function ChatView({
               args: event.args,
               status: "pendente",
             })
+          } else if (event.type === "executed") {
+            // Já está no banco. O card fica para Hugo ver o que aconteceu e
+            // poder voltar atrás — autonomia sem desfazer é que assusta.
+            proposals.push({
+              id: event.id,
+              tool: event.tool,
+              args: event.args,
+              status: "feita",
+              resumo: event.resumo,
+              desfazer: event.desfazer,
+            })
           } else if (event.type === "error") {
             toast.error(event.message)
           }
@@ -307,7 +318,7 @@ export function ChatView({
   function resolveProposal(
     messageId: string,
     proposalId: string,
-    status: "aceita" | "recusada"
+    status: "aceita" | "recusada" | "desfeita"
   ) {
     setMessages((prev) =>
       prev.map((m) =>

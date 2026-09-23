@@ -20,6 +20,7 @@ import {
   Link2,
   SquareKanban,
   StickyNote,
+  Undo2,
   X,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -60,7 +61,7 @@ export function ProposalCard({
   onResolve,
 }: {
   proposal: Proposal
-  onResolve: (id: string, status: "aceita" | "recusada") => void
+  onResolve: (id: string, status: "aceita" | "recusada" | "desfeita") => void
 }) {
   const [saving, setSaving] = useState(false)
   // Numa edição o card só recebe o id. Sem buscar o título, Hugo confirmaria
@@ -80,6 +81,40 @@ export function ProposalCard({
     tool === "propor_memoria" && str(args.tipo) === "jeito"
       ? { titulo: "Ajustar seu jeito", destino: "muda como o assistente responde" }
       : meta
+
+  /**
+   * Volta atrás no que o assistente gravou sozinho.
+   *
+   * Criação se desfaz apagando; edição se desfaz **restaurando** o conteúdo
+   * anterior, que veio junto no evento — apagar uma nota editada levaria junto
+   * tudo o que já estava lá antes.
+   */
+  async function desfazer() {
+    const alvo = proposal.desfazer
+    if (!alvo || alvo.tipo === "nenhum") return
+
+    setSaving(true)
+    const supabase = createClient()
+    const { error } =
+      alvo.tipo === "apagar"
+        ? await supabase.from(alvo.tabela).delete().eq("id", alvo.id)
+        : await supabase
+            .from("notes")
+            .update({
+              content: alvo.conteudo,
+              title: alvo.titulo,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", alvo.id)
+    setSaving(false)
+
+    if (error) {
+      toast.error(`Não deu para desfazer: ${error.message}`)
+      return
+    }
+    toast.success("Desfeito")
+    onResolve(proposal.id, "desfeita")
+  }
 
   const idNota = tool === "propor_edicao_nota" ? str(args.id) : ""
   useEffect(() => {
@@ -219,7 +254,7 @@ export function ProposalCard({
   return (
     <div
       className={`my-3 overflow-hidden rounded-xl border transition-opacity ${
-        status === "recusada" ? "opacity-50" : ""
+        status === "recusada" || status === "desfeita" ? "opacity-50" : ""
       }`}
     >
       <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-2">
@@ -232,9 +267,11 @@ export function ProposalCard({
           <span className="ml-auto font-mono text-[11px] text-muted-foreground">
             {status === "recusada"
               ? "descartada"
-              : tool === "propor_edicao_nota"
-                ? "atualizada"
-                : "criada"}
+              : status === "desfeita"
+                ? "desfeita"
+                : tool === "propor_edicao_nota"
+                  ? "atualizada"
+                  : "criada"}
           </span>
         )}
       </div>
@@ -281,6 +318,27 @@ export function ProposalCard({
           </p>
         )}
       </div>
+
+      {status === "feita" && (
+        <div className="flex items-center gap-2 border-t px-3 py-2">
+          <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Check className="size-3.5" />
+            {proposal.resumo ?? "Gravado"}
+          </span>
+          {proposal.desfazer && proposal.desfazer.tipo !== "nenhum" && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={saving}
+              onClick={desfazer}
+              className="ml-auto"
+            >
+              <Undo2 className="size-3.5" />
+              Desfazer
+            </Button>
+          )}
+        </div>
+      )}
 
       {status === "pendente" && (
         <div className="flex gap-2 border-t px-3 py-2">

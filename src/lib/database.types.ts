@@ -306,6 +306,7 @@ export type Database = {
       }
       settings: {
         Row: {
+          acao_direta: boolean
           ai_api_key: string
           ai_base_url: string
           ai_instructions: string
@@ -319,6 +320,7 @@ export type Database = {
           id: boolean
         }
         Insert: {
+          acao_direta?: boolean
           ai_api_key?: string
           ai_base_url?: string
           ai_instructions?: string
@@ -332,6 +334,7 @@ export type Database = {
           id?: boolean
         }
         Update: {
+          acao_direta?: boolean
           ai_api_key?: string
           ai_base_url?: string
           ai_instructions?: string
