@@ -6,12 +6,17 @@
  * em desenvolvimento e em produção, igual nos dois.
  */
 
-import { driveVaultEnabled } from "@/lib/ai/config"
+import { cofreLigado, type AiSettings } from "@/lib/ai/settings"
 import { DriveVault } from "./drive"
 import type { VaultSource } from "./source"
 
-export function getVault(): VaultSource | null {
-  return driveVaultEnabled() ? new DriveVault() : null
+/**
+ * As credenciais chegam por parâmetro, e não de constante de módulo, porque o
+ * que vale é a configuração resolvida — banco primeiro, ambiente como padrão
+ * de fábrica.
+ */
+export function getVault(settings: AiSettings): VaultSource | null {
+  return cofreLigado(settings) ? new DriveVault(settings.drive) : null
 }
 
 export type { VaultSource } from "./source"

@@ -310,27 +310,39 @@ export type Database = {
           ai_base_url: string
           ai_instructions: string
           ai_model: string
-          id: boolean
+          drive_app_id: string
+          drive_app_secret: string
+          drive_folder: string
+          drive_renewal: string
           tavily_api_key: string
           updated_at: string
+          id: boolean
         }
         Insert: {
           ai_api_key?: string
           ai_base_url?: string
           ai_instructions?: string
           ai_model?: string
-          id?: boolean
+          drive_app_id?: string
+          drive_app_secret?: string
+          drive_folder?: string
+          drive_renewal?: string
           tavily_api_key?: string
           updated_at?: string
+          id?: boolean
         }
         Update: {
           ai_api_key?: string
           ai_base_url?: string
           ai_instructions?: string
           ai_model?: string
-          id?: boolean
+          drive_app_id?: string
+          drive_app_secret?: string
+          drive_folder?: string
+          drive_renewal?: string
           tavily_api_key?: string
           updated_at?: string
+          id?: boolean
         }
         Relationships: []
       }

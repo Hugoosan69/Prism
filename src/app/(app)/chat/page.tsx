@@ -1,8 +1,7 @@
 import { ChatView } from "@/components/chat/chat-view"
 import type { Message, ToolCall } from "@/components/chat/types"
 import { createClient } from "@/lib/supabase/server"
-import { vaultEnabled } from "@/lib/ai/config"
-import { carregarSettings } from "@/lib/ai/settings"
+import { carregarSettings, cofreLigado } from "@/lib/ai/settings"
 
 export const dynamic = "force-dynamic"
 
@@ -47,7 +46,7 @@ export default async function ChatPage({
       enabled={Boolean(settings.apiKey)}
       sources={{
         prism: true,
-        cofre: vaultEnabled(),
+        cofre: cofreLigado(settings),
         web: Boolean(settings.tavilyKey),
       }}
     />

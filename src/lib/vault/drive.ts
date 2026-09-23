@@ -11,12 +11,7 @@
  * recortadas aqui — daí o teto baixo de resultados.
  */
 
-import {
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  GOOGLE_REFRESH_TOKEN,
-  GOOGLE_VAULT_FOLDER,
-} from "@/lib/ai/config"
+import type { DriveSettings } from "@/lib/ai/settings"
 import type { VaultHit, VaultNote, VaultSource } from "./source"
 
 const DRIVE = "https://www.googleapis.com/drive/v3"
@@ -32,6 +27,8 @@ function quote(value: string) {
 }
 
 export class DriveVault implements VaultSource {
+  constructor(private readonly credenciais: DriveSettings) {}
+
   private token: { value: string; expiresAt: number } | null = null
   private rootId: string | null = null
   /** Caminho legível por id, montado durante a navegação das pastas. */
@@ -49,9 +46,9 @@ export class DriveVault implements VaultSource {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        client_id: GOOGLE_CLIENT_ID,
-        client_secret: GOOGLE_CLIENT_SECRET,
-        refresh_token: GOOGLE_REFRESH_TOKEN,
+        client_id: this.credenciais.clientId,
+        client_secret: this.credenciais.clientSecret,
+        refresh_token: this.credenciais.refreshToken,
         grant_type: "refresh_token",
       }),
     })
@@ -111,7 +108,7 @@ export class DriveVault implements VaultSource {
   private async root(): Promise<string> {
     if (this.rootId) return this.rootId
 
-    const segments = GOOGLE_VAULT_FOLDER.split("/")
+    const segments = this.credenciais.folder.split("/")
       .map((s) => s.trim())
       .filter(Boolean)
 
@@ -124,7 +121,7 @@ export class DriveVault implements VaultSource {
       if (folders.length === 0) {
         throw new Error(
           `Pasta "${segment}" não encontrada no Drive (caminho ` +
-            `"${GOOGLE_VAULT_FOLDER}"). Confira o nome, incluindo acentos.`
+            `"${this.credenciais.folder}"). Confira o nome, incluindo acentos.`
         )
       }
       parent = folders[0].id

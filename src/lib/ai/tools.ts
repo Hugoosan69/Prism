@@ -15,12 +15,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/database.types"
 import type { ToolSchema } from "./client"
-import {
-  LIMITE_RESULTADO_FERRAMENTA,
-  LIMITE_TEXTO_LONGO,
-  vaultEnabled,
-} from "./config"
-import type { AiSettings } from "./settings"
+import { LIMITE_RESULTADO_FERRAMENTA, LIMITE_TEXTO_LONGO } from "./config"
+import { cofreLigado, type AiSettings } from "./settings"
 import { getVault } from "@/lib/vault"
 
 const READ_TOOLS: ToolSchema[] = [
@@ -323,11 +319,11 @@ export const WRITE_TOOL_NAMES = new Set(
   WRITE_TOOLS.map((t) => t.function.name)
 )
 
-export function availableTools(temWeb: boolean): ToolSchema[] {
+export function availableTools(settings: AiSettings): ToolSchema[] {
   return [
     ...READ_TOOLS,
-    ...(vaultEnabled() ? VAULT_TOOLS : []),
-    ...(temWeb ? WEB_TOOLS : []),
+    ...(cofreLigado(settings) ? VAULT_TOOLS : []),
+    ...(settings.tavilyKey ? WEB_TOOLS : []),
     ...WRITE_TOOLS,
   ]
 }
@@ -742,7 +738,7 @@ export async function runReadTool(
       }
 
       case "cofre_indices": {
-        const vault = getVault()
+        const vault = getVault(settings)
         if (!vault) return { erro: "Cofre não configurado." }
 
         const notes = await vault.listIndexes()
@@ -758,7 +754,7 @@ export async function runReadTool(
       }
 
       case "cofre_buscar": {
-        const vault = getVault()
+        const vault = getVault(settings)
         if (!vault) return { erro: "Cofre não configurado." }
 
         const hits = await vault.search(
@@ -774,7 +770,7 @@ export async function runReadTool(
       }
 
       case "cofre_ler": {
-        const vault = getVault()
+        const vault = getVault(settings)
         if (!vault) return { erro: "Cofre não configurado." }
 
         const note = await vault.readNote(String(args.caminho ?? ""))

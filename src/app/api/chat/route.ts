@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
   ]
 
   const encoder = new TextEncoder()
-  const tools = availableTools(Boolean(settings.tavilyKey))
+  const tools = availableTools(settings)
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {

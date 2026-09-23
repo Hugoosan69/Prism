@@ -62,9 +62,9 @@ export const GOOGLE_REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN ?? ""
 export const GOOGLE_VAULT_FOLDER =
   process.env.GOOGLE_VAULT_FOLDER ?? "Obsidian/SEGUNDO CÉREBRO"
 
-export const driveVaultEnabled = () =>
-  GOOGLE_CLIENT_ID.length > 0 &&
-  GOOGLE_CLIENT_SECRET.length > 0 &&
-  GOOGLE_REFRESH_TOKEN.length > 0
-
-export const vaultEnabled = driveVaultEnabled
+/**
+ * Quem decide se o cofre está ligado é `cofreLigado` em `settings.ts`, sobre a
+ * configuração resolvida. O helper que morava aqui só enxergava a variável de
+ * ambiente — e quando o ambiente não chegava ao processo, o cofre se desligava
+ * sem nenhum jeito de religar pela tela.
+ */

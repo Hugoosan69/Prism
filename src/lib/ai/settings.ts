@@ -13,6 +13,10 @@ import {
   AI_API_KEY,
   AI_BASE_URL,
   AI_MODEL,
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_REFRESH_TOKEN,
+  GOOGLE_VAULT_FOLDER,
   TAVILY_API_KEY,
 } from "./config"
 
@@ -23,6 +27,15 @@ export type AiSettings = {
   tavilyKey: string
   /** Diretriz escrita por Hugo. Vazio = só a personalidade de partida vale. */
   instructions: string
+  /** Credenciais do Drive para ler o cofre. Ver `drive` mais abaixo. */
+  drive: DriveSettings
+}
+
+export type DriveSettings = {
+  clientId: string
+  clientSecret: string
+  refreshToken: string
+  folder: string
 }
 
 export const PADRAO: AiSettings = {
@@ -31,7 +44,24 @@ export const PADRAO: AiSettings = {
   apiKey: AI_API_KEY,
   tavilyKey: TAVILY_API_KEY,
   instructions: "",
+  drive: {
+    clientId: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    refreshToken: GOOGLE_REFRESH_TOKEN,
+    folder: GOOGLE_VAULT_FOLDER,
+  },
 }
+
+/**
+ * O cofre está ligado quando as três credenciais existem, venham do banco ou
+ * do ambiente. Substituiu `vaultEnabled()` de `config.ts`, que só enxergava a
+ * variável de ambiente: quando o ambiente não chegava ao processo, o cofre
+ * sumia sem ter como religar pela tela.
+ */
+export const cofreLigado = (settings: AiSettings) =>
+  settings.drive.clientId.length > 0 &&
+  settings.drive.clientSecret.length > 0 &&
+  settings.drive.refreshToken.length > 0
 
 /**
  * Lê a configuração aplicável.
@@ -46,7 +76,9 @@ export async function carregarSettings(
   try {
     const { data } = await supabase
       .from("settings")
-      .select("ai_base_url, ai_model, ai_api_key, tavily_api_key, ai_instructions")
+      // Literal única, sem concatenar: o supabase-js tipa a linha a partir do
+      // texto do select, e uma soma de strings devolve o tipo de erro genérico.
+      .select("ai_base_url, ai_model, ai_api_key, tavily_api_key, ai_instructions, drive_app_id, drive_app_secret, drive_renewal, drive_folder")
       .maybeSingle()
 
     if (!data) return PADRAO
@@ -57,6 +89,12 @@ export async function carregarSettings(
       apiKey: data.ai_api_key?.trim() || PADRAO.apiKey,
       tavilyKey: data.tavily_api_key?.trim() || PADRAO.tavilyKey,
       instructions: data.ai_instructions?.trim() ?? "",
+      drive: {
+        clientId: data.drive_app_id?.trim() || PADRAO.drive.clientId,
+        clientSecret: data.drive_app_secret?.trim() || PADRAO.drive.clientSecret,
+        refreshToken: data.drive_renewal?.trim() || PADRAO.drive.refreshToken,
+        folder: data.drive_folder?.trim() || PADRAO.drive.folder,
+      },
     }
   } catch {
     return PADRAO

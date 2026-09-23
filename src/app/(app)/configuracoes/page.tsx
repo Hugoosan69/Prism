@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { Bot, Brain, LogOut, Palette, Sparkles, UserRound } from "lucide-react"
+import { BookOpen, Bot, Brain, LogOut, Palette, Sparkles, UserRound } from "lucide-react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/tabs"
 import { AgentInstructionsForm } from "@/components/chat/agent-instructions-form"
 import { AiSettingsForm } from "@/components/chat/ai-settings-form"
+import { VaultSettingsForm } from "@/components/chat/vault-settings-form"
 import { MemoryManager } from "@/components/chat/memory-manager"
 import { createClient } from "@/lib/supabase/client"
 
@@ -164,6 +165,18 @@ export default function ConfiguracoesPage() {
                 fato e jeito.
               </p>
               <MemoryManager />
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <SectionTitle>Cofre no Drive</SectionTitle>
+            <div className="space-y-4 rounded-xl border bg-card p-5">
+              <p className="flex items-start gap-2 text-xs text-muted-foreground">
+                <BookOpen className="mt-0.5 size-3.5 shrink-0" />
+                Credenciais para o chat ler o Segundo Cérebro. O que estiver
+                aqui vence a variável de ambiente.
+              </p>
+              <VaultSettingsForm />
             </div>
           </section>
 
