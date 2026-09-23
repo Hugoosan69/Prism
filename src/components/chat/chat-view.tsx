@@ -43,9 +43,13 @@ export function ChatView({
   const [historyOpen, setHistoryOpen] = useState(false)
   /** Id da resposta que está sendo gerada, para a bolha mostrar "Pensando". */
   const [pendingId, setPendingId] = useState<string | null>(null)
+  // Continua valendo depois do fim do streaming: a revelação precisa terminar
+  // de digitar o que já chegou, em vez de o texto saltar inteiro na tela.
+  const [animatedId, setAnimatedId] = useState<string | null>(null)
 
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const threadRef = useRef<string | null>(threadId)
   const loadedRef = useRef<string | null>(threadId)
 
@@ -60,9 +64,41 @@ export function ChatView({
     setMessages(initialMessages)
   }, [threadId, initialMessages])
 
+  /**
+   * Acompanha o fim da conversa enquanto ela cresce.
+   *
+   * Observar o **tamanho** do conteúdo, e não a chegada de mensagens, porque a
+   * resposta agora é revelada aos poucos: entre um pedaço e outro da rede o
+   * texto continua crescendo sozinho, e um efeito preso a `messages` deixaria
+   * a linha sendo digitada embaixo da dobra.
+   *
+   * E só acompanha se Hugo já estiver perto do fim: se ele subiu para reler
+   * algo, puxar a tela de volta a cada linha nova tornaria a leitura
+   * impossível.
+   */
   useEffect(() => {
+    const area = scrollRef.current
+    if (!area) return
+
+    const acompanhar = () => {
+      const distancia =
+        area.scrollHeight - area.scrollTop - area.clientHeight
+      if (distancia < 160) {
+        bottomRef.current?.scrollIntoView({ block: "end" })
+      }
+    }
+
+    acompanhar()
+    const observer = new ResizeObserver(acompanhar)
+    if (area.firstElementChild) observer.observe(area.firstElementChild)
+    return () => observer.disconnect()
+  }, [threadId])
+
+  // Pergunta nova sempre desce a tela, mesmo que ele estivesse lendo acima.
+  useEffect(() => {
+    if (!streaming) return
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, activity])
+  }, [streaming])
 
   /**
    * Garante uma conversa no banco antes de gravar a primeira mensagem, usando
@@ -137,6 +173,7 @@ export function ChatView({
       { id: assistantId, role: "assistant", content: "", reasoning: "" },
     ])
     setPendingId(assistantId)
+    setAnimatedId(assistantId)
 
     await ensureThread(question)
     await persist("user", question)
@@ -343,7 +380,7 @@ export function ChatView({
           />
         ) : (
           <>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4">
+            <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4">
               {/* justify-end + min-h-full: com poucas mensagens a conversa
                   encosta no composer em vez de ficar colada no topo, deixando
                   um vazio no meio da tela em monitor alto. */}
@@ -353,6 +390,7 @@ export function ChatView({
                     key={message.id}
                     message={message}
                     pending={message.id === pendingId}
+                    animate={message.id === animatedId}
                     onResolveProposal={(proposalId, status) =>
                       resolveProposal(message.id, proposalId, status)
                     }
