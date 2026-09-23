@@ -8,13 +8,13 @@
  * ler título por título.
  */
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { isThisYear, isToday, isYesterday, differenceInDays } from "date-fns"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { PenSquare, Trash2 } from "lucide-react"
+import { Pencil, PenSquare, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 
@@ -56,6 +56,47 @@ export function ConversationList({
 }) {
   const router = useRouter()
   const [removing, setRemoving] = useState<string | null>(null)
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [rascunho, setRascunho] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!renaming) return
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  }, [renaming])
+
+  function abrirRenomear(thread: ThreadSummary) {
+    setRenaming(thread.id)
+    setRascunho(thread.title)
+  }
+
+  /**
+   * Renomear **não** mexe em `updated_at`.
+   *
+   * A lista é agrupada por data de atualização, então tocar nesse campo faria a
+   * conversa pular para "Hoje" só por ter sido renomeada — e arrumar o nome de
+   * uma conversa de semana passada a tiraria do lugar onde ela é procurada.
+   * Renomear é etiqueta, não atividade.
+   */
+  async function renomear(id: string) {
+    const titulo = rascunho.trim()
+    setRenaming(null)
+
+    const atual = threads.find((t) => t.id === id)
+    if (!titulo || !atual || titulo === atual.title) return
+
+    const { error } = await createClient()
+      .from("chat_threads")
+      .update({ title: titulo })
+      .eq("id", id)
+
+    if (error) {
+      toast.error(`Não deu para renomear: ${error.message}`)
+      return
+    }
+    router.refresh()
+  }
 
   async function remove(id: string) {
     setRemoving(id)
@@ -111,22 +152,62 @@ export function ConversationList({
                       : "hover:bg-muted/60"
                   }`}
                 >
-                  <Link
-                    href={`/chat?thread=${thread.id}`}
-                    onClick={onNavigate}
-                    className="min-w-0 flex-1 truncate px-2 py-1.5 text-sm"
-                    title={thread.title}
-                  >
-                    {thread.title || "Sem título"}
-                  </Link>
-                  <button
-                    onClick={() => remove(thread.id)}
-                    disabled={removing === thread.id}
-                    aria-label={`Apagar conversa ${thread.title}`}
-                    className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:text-destructive focus-visible:opacity-100 group-hover/item:opacity-100"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
+                  {renaming === thread.id ? (
+                    <input
+                      ref={inputRef}
+                      value={rascunho}
+                      onChange={(e) => setRascunho(e.target.value)}
+                      // Sair do campo salva: é o gesto natural de "terminei".
+                      // Esc desfaz antes disso, e por ser blur também, a ordem
+                      // importa — limpar o rascunho faz o blur virar um no-op.
+                      onBlur={() => renomear(thread.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          renomear(thread.id)
+                        }
+                        if (e.key === "Escape") {
+                          setRascunho("")
+                          setRenaming(null)
+                        }
+                      }}
+                      maxLength={120}
+                      aria-label="Nome da conversa"
+                      className="min-w-0 flex-1 rounded bg-background px-2 py-1 text-sm outline-none ring-1 ring-ring"
+                    />
+                  ) : (
+                    <>
+                      <Link
+                        href={`/chat?thread=${thread.id}`}
+                        onClick={onNavigate}
+                        onDoubleClick={(e) => {
+                          e.preventDefault()
+                          abrirRenomear(thread)
+                        }}
+                        className="min-w-0 flex-1 truncate px-2 py-1.5 text-sm"
+                        title={thread.title}
+                      >
+                        {thread.title || "Sem título"}
+                      </Link>
+                      <button
+                        onClick={() => abrirRenomear(thread)}
+                        aria-label={`Renomear conversa ${thread.title}`}
+                        title="Renomear"
+                        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:text-foreground focus-visible:opacity-100 group-hover/item:opacity-100"
+                      >
+                        <Pencil className="size-3.5" />
+                      </button>
+                      <button
+                        onClick={() => remove(thread.id)}
+                        disabled={removing === thread.id}
+                        aria-label={`Apagar conversa ${thread.title}`}
+                        title="Apagar"
+                        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:text-destructive focus-visible:opacity-100 group-hover/item:opacity-100"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
