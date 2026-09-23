@@ -57,29 +57,25 @@ export function Composer({
         />
 
         <div className="flex items-center gap-2 px-3 pb-2.5">
+          {/* As três aparecem sempre, ligadas ou não. Esconder a que está
+              desligada faz um recurso sumir sem deixar rastro, e a pergunta
+              vira "o que foi que quebrou?" em vez de "falta a chave". */}
           <div className="flex items-center gap-2 text-muted-foreground">
-            <span
-              className="flex items-center gap-1 text-[11px]"
-              title="Suas consultas, notas, tarefas e links"
-            >
-              <Database className="size-3" />
-              Prism
-            </span>
-            {sources.cofre && (
-              <span
-                className="flex items-center gap-1 text-[11px]"
-                title="Segundo Cérebro, no Google Drive"
-              >
-                <BookOpen className="size-3" />
-                Cofre
-              </span>
-            )}
-            {sources.web && (
-              <span className="flex items-center gap-1 text-[11px]" title="Busca na web">
-                <Globe className="size-3" />
-                Web
-              </span>
-            )}
+            <Fonte ligada icone={Database} nome="Prism" porque="Suas consultas, notas, tarefas e links" />
+            <Fonte
+              ligada={sources.cofre}
+              icone={BookOpen}
+              nome="Cofre"
+              porque="Segundo Cérebro, no Google Drive"
+              seDesligada="Desligado: faltam GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET ou GOOGLE_REFRESH_TOKEN no ambiente onde o Prism está rodando."
+            />
+            <Fonte
+              ligada={sources.web}
+              icone={Globe}
+              nome="Web"
+              porque="Busca na web"
+              seDesligada="Desligado: sem chave da Tavily, nem em Configurações nem no ambiente."
+            />
           </div>
 
           <div className="ml-auto">
@@ -117,5 +113,37 @@ export function Composer({
         </p>
       )}
     </div>
+  )
+}
+
+/**
+ * Selo de uma fonte de consulta.
+ *
+ * A desligada continua na linha, apagada e riscada, com o motivo no title. É a
+ * diferença entre descobrir que falta uma chave e achar que o chat quebrou.
+ */
+function Fonte({
+  ligada,
+  icone: Icone,
+  nome,
+  porque,
+  seDesligada,
+}: {
+  ligada: boolean
+  icone: React.ElementType
+  nome: string
+  porque: string
+  seDesligada?: string
+}) {
+  return (
+    <span
+      title={ligada ? porque : (seDesligada ?? porque)}
+      className={`flex items-center gap-1 text-[11px] ${
+        ligada ? "" : "text-muted-foreground/40 line-through decoration-1"
+      }`}
+    >
+      <Icone className="size-3" />
+      {nome}
+    </span>
   )
 }
