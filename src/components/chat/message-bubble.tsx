@@ -26,7 +26,7 @@ export function MessageBubble({
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-muted px-4 py-2.5 text-[15px] whitespace-pre-wrap">
+        <div className="max-w-[85%] rounded-2xl rounded-br-md bg-muted px-4 py-2.5 text-[15px] break-words whitespace-pre-wrap">
           {message.content}
         </div>
       </div>
@@ -99,7 +99,7 @@ export function MessageBubble({
           <button
             onClick={copy}
             aria-label="Copiar resposta"
-            className="text-muted-foreground opacity-0 transition hover:text-foreground focus-visible:opacity-100 group-hover/msg:opacity-100"
+            className="text-muted-foreground opacity-0 transition hover:text-foreground focus-visible:opacity-100 group-hover/msg:opacity-100 [@media(hover:none)]:opacity-100"
           >
             {copied ? (
               <Check className="size-3.5" />
@@ -233,7 +233,7 @@ function Pensando({ reasoning }: { reasoning?: string }) {
 function Dot({ delay }: { delay: string }) {
   return (
     <span
-      className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60"
+      className="size-1.5 motion-safe:animate-pulse rounded-full bg-muted-foreground/60"
       style={{ animationDelay: delay }}
     />
   )

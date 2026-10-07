@@ -9,7 +9,8 @@
  */
 
 import { useEffect, useState } from "react"
-import { Database, Sparkles, StickyNote, Search } from "lucide-react"
+import Link from "next/link"
+import { Database, Sparkles, SquareKanban, Search } from "lucide-react"
 import { PrismMark } from "@/components/brand/prism-mark"
 
 const ATALHOS = [
@@ -19,7 +20,7 @@ const ATALHOS = [
     prompt: "Qual consulta eu tenho salva para rejeição de GTIN?",
   },
   {
-    icon: StickyNote,
+    icon: SquareKanban,
     label: "Revisar o dia",
     prompt: "O que está pendente no meu Kanban agora?",
   },
@@ -64,8 +65,14 @@ export function WelcomeScreen({
 
         {!enabled ? (
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            O chat está desligado: falta <code>OPENAI_API_KEY</code> nas
-            variáveis de ambiente.
+            O chat está desligado: falta a chave do modelo. Cadastre em{" "}
+            <Link
+              href="/configuracoes"
+              className="underline underline-offset-4 hover:text-foreground"
+            >
+              Configurações
+            </Link>
+            .
           </p>
         ) : (
           <div className="mt-6 flex flex-wrap justify-center gap-2">

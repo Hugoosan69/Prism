@@ -16,6 +16,16 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { Pencil, PenSquare, Trash2 } from "lucide-react"
 import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { createClient } from "@/lib/supabase/client"
 
 export type ThreadSummary = {
@@ -56,6 +66,7 @@ export function ConversationList({
 }) {
   const router = useRouter()
   const [removing, setRemoving] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState<ThreadSummary | null>(null)
   const [renaming, setRenaming] = useState<string | null>(null)
   const [rascunho, setRascunho] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
@@ -193,16 +204,16 @@ export function ConversationList({
                         onClick={() => abrirRenomear(thread)}
                         aria-label={`Renomear conversa ${thread.title}`}
                         title="Renomear"
-                        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:text-foreground focus-visible:opacity-100 group-hover/item:opacity-100"
+                        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:text-foreground focus-visible:opacity-100 group-hover/item:opacity-100 [@media(hover:none)]:opacity-100"
                       >
                         <Pencil className="size-3.5" />
                       </button>
                       <button
-                        onClick={() => remove(thread.id)}
+                        onClick={() => setConfirming(thread)}
                         disabled={removing === thread.id}
                         aria-label={`Apagar conversa ${thread.title}`}
                         title="Apagar"
-                        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:text-destructive focus-visible:opacity-100 group-hover/item:opacity-100"
+                        className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition hover:text-destructive focus-visible:opacity-100 group-hover/item:opacity-100 [@media(hover:none)]:opacity-100"
                       >
                         <Trash2 className="size-3.5" />
                       </button>
@@ -214,6 +225,34 @@ export function ConversationList({
           ))
         )}
       </nav>
+
+      <AlertDialog
+        open={confirming !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirming(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar conversa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A conversa &quot;{confirming?.title || "Sem título"}&quot; e todas
+              as mensagens dela serão removidas. Essa ação não pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirming) remove(confirming.id)
+              }}
+            >
+              Apagar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

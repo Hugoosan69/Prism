@@ -360,7 +360,7 @@ export function ChatView({
         <div className="shrink-0 px-3 pt-3 md:hidden">
           <button
             onClick={() => setHistoryOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs text-muted-foreground"
+            className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <MessagesSquare className="size-3.5" />
             Conversas
