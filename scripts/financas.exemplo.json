@@ -1,0 +1,21 @@
+{
+  "_comentario": "Formato esperado por importar-financas.mjs. Copie para financas.local.json (fora do git) com os valores reais.",
+  "inicio": "2026-08-01",
+  "mesesPagos": ["2026-08", "2026-09", "2026-10"],
+  "despesas": [
+    { "descricao": "Internet", "valor": 134 },
+    {
+      "descricao": "Exemplo parcelado",
+      "valor": 300,
+      "recorrencia": "parcelada",
+      "parcelas": 10,
+      "inicio": "2026-09-01",
+      "pagos": ["2026-09", "2026-10"]
+    },
+    { "descricao": "Exemplo variável", "valor": 190, "tipo": "variavel" }
+  ],
+  "proventos": [
+    { "descricao": "Salário Exemplo", "valor": 5100, "recorrente": true },
+    { "descricao": "Extra", "valor": 120, "mes": "2026-10" }
+  ]
+}

@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   SquareKanban,
   StickyNote,
+  Wallet,
   type LucideIcon,
 } from "lucide-react"
 
@@ -36,6 +37,12 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/kanban",
     icon: SquareKanban,
     accent: "var(--spec-kanban)",
+  },
+  {
+    title: "Finanças",
+    href: "/financas",
+    icon: Wallet,
+    accent: "var(--spec-financas)",
   },
   { title: "SQL", href: "/sql", icon: Database, accent: "var(--spec-sql)" },
   {

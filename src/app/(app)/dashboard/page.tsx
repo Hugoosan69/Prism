@@ -9,6 +9,7 @@ import {
   Hourglass,
   Link2,
   StickyNote,
+  Wallet,
 } from "lucide-react"
 import { PageHeader } from "@/components/layout/page-header"
 import {
@@ -18,12 +19,21 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/server"
+import {
+  despesasDoMes,
+  formatarReal,
+  mesAtual,
+  resumoDoMes,
+} from "@/lib/financas"
+import type { Expense, ExpensePayment, Income } from "@/lib/types"
 
 export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const todayStart = startOfDay(new Date()).toISOString()
+
+  const mes = mesAtual()
 
   const [
     pending,
@@ -32,6 +42,9 @@ export default async function DashboardPage() {
     recentSnippets,
     recentNotes,
     recentLinks,
+    expensesResult,
+    paymentsResult,
+    incomesResult,
   ] = await Promise.all([
       // Pendentes = o que depende de você; o que aguarda terceiros tem card próprio
       supabase
@@ -68,7 +81,23 @@ export default async function DashboardPage() {
         .select("id, title, url, created_at")
         .order("created_at", { ascending: false })
         .limit(5),
+      // O mesmo cálculo da tela de Finanças, por `lib/financas.ts`: duas
+      // respostas diferentes para "quanto falta pagar" seria pior que nenhuma.
+      supabase.from("expenses").select("*"),
+      supabase.from("expense_payments").select("*").eq("month", mes),
+      supabase.from("incomes").select("*"),
     ])
+
+  const linhasDoMes = despesasDoMes(
+    (expensesResult.data as Expense[]) ?? [],
+    (paymentsResult.data as ExpensePayment[]) ?? [],
+    mes
+  )
+  const financas = resumoDoMes(
+    linhasDoMes,
+    (incomesResult.data as Income[]) ?? [],
+    mes
+  )
 
   return (
     <div className="space-y-6">
@@ -270,6 +299,38 @@ export default async function DashboardPage() {
         </Card>
 
         <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <Wallet className="size-4 text-muted-foreground" />
+              Saldo do mês
+            </CardTitle>
+            <span
+              className={`font-mono text-xl font-semibold tabular-nums ${
+                financas.saldo < 0 ? "text-destructive" : ""
+              }`}
+            >
+              {formatarReal(financas.saldo)}
+            </span>
+          </CardHeader>
+          <CardContent className="space-y-1.5 text-sm">
+            {linhasDoMes.length === 0 ? (
+              <p className="text-muted-foreground">
+                Nenhuma despesa neste mês.
+              </p>
+            ) : (
+              <p className="text-muted-foreground">
+                {financas.faltaPagar > 0
+                  ? `Falta pagar ${formatarReal(financas.faltaPagar)}`
+                  : "Tudo pago neste mês."}
+              </p>
+            )}
+            <Link href="/financas" className="block hover:underline">
+              Abrir Finanças
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Bookmark className="size-4 text-muted-foreground" />
@@ -288,6 +349,9 @@ export default async function DashboardPage() {
             </Link>
             <Link href="/favoritos?new=1" className="block hover:underline">
               + Novo favorito
+            </Link>
+            <Link href="/financas?new=1" className="block hover:underline">
+              + Nova despesa
             </Link>
           </CardContent>
         </Card>

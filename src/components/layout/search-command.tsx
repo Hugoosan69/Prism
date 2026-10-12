@@ -62,7 +62,8 @@ export function SearchCommand({ open, onOpenChange }: Props) {
       const supabase = createClient()
       const like = `%${term}%`
 
-      const [tasks, snippets, notes, links, bookmarks, chat] = await Promise.all([
+      const [tasks, snippets, notes, links, bookmarks, chat, expenses, incomes] =
+        await Promise.all([
         supabase
           .from("tasks")
           .select("id, title, status")
@@ -94,9 +95,36 @@ export function SearchCommand({ open, onOpenChange }: Props) {
           .select("id, content, thread_id")
           .ilike("content", like)
           .limit(5),
+        supabase
+          .from("expenses")
+          .select("id, description, start_month")
+          .or(`description.ilike.${like},notes.ilike.${like}`)
+          .limit(5),
+        supabase
+          .from("incomes")
+          .select("id, description, month")
+          .ilike("description", like)
+          .limit(5),
       ])
 
       const found: Result[] = [
+        ...(expenses.data ?? []).map((e) => ({
+          id: `expense-${e.id}`,
+          label: e.description,
+          hint: "Despesa",
+          group: "Finanças",
+          action: () =>
+            router.push(
+              `/financas?mes=${e.start_month.slice(0, 7)}&expense=${e.id}`
+            ),
+        })),
+        ...(incomes.data ?? []).map((i) => ({
+          id: `income-${i.id}`,
+          label: i.description,
+          hint: "Provento",
+          group: "Finanças",
+          action: () => router.push(`/financas?mes=${i.month.slice(0, 7)}`),
+        })),
         ...(tasks.data ?? []).map((t) => ({
           id: `task-${t.id}`,
           label: t.title,

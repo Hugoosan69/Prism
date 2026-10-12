@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Dados financeiros reais: repositorio publico
+scripts/financas.local.json

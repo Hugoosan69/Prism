@@ -141,6 +141,80 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_payments: {
+        Row: {
+          amount_paid: number | null
+          expense_id: string
+          id: string
+          month: string
+          paid_at: string
+        }
+        Insert: {
+          amount_paid?: number | null
+          expense_id: string
+          id?: string
+          month: string
+          paid_at?: string
+        }
+        Update: {
+          amount_paid?: number | null
+          expense_id?: string
+          id?: string
+          month?: string
+          paid_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_payments_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          active: boolean
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          installments_total: number | null
+          kind: string
+          notes: string
+          recurrence: string
+          start_month: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount?: number
+          created_at?: string
+          description: string
+          id?: string
+          installments_total?: number | null
+          kind?: string
+          notes?: string
+          recurrence?: string
+          start_month: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          installments_total?: number | null
+          kind?: string
+          notes?: string
+          recurrence?: string
+          start_month?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       files: {
         Row: {
           created_at: string
@@ -207,6 +281,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      incomes: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          month: string
+          recurring: boolean
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description: string
+          id?: string
+          month: string
+          recurring?: boolean
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          month?: string
+          recurring?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       links: {
         Row: {

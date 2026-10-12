@@ -10,6 +10,37 @@ export type Bookmark = Tables<"bookmarks">
 export type Memory = Tables<"memories">
 export type ChatThread = Tables<"chat_threads">
 export type ChatMessageRow = Tables<"chat_messages">
+export type Expense = Tables<"expenses">
+export type ExpensePayment = Tables<"expense_payments">
+export type Income = Tables<"incomes">
+
+export type ExpenseKind = "fixa" | "variavel"
+export type ExpenseRecurrence = "mensal" | "parcelada" | "unica"
+
+export const EXPENSE_KINDS: ExpenseKind[] = ["fixa", "variavel"]
+export const EXPENSE_RECURRENCES: ExpenseRecurrence[] = [
+  "mensal",
+  "parcelada",
+  "unica",
+]
+
+export const EXPENSE_KIND_LABELS: Record<ExpenseKind, string> = {
+  fixa: "Fixa",
+  variavel: "Variável",
+}
+
+export const EXPENSE_RECURRENCE_LABELS: Record<ExpenseRecurrence, string> = {
+  mensal: "Todo mês",
+  parcelada: "Parcelada",
+  unica: "Uma vez",
+}
+
+/** Explica a recorrência onde o nome não basta (dica no diálogo). */
+export const EXPENSE_RECURRENCE_HINTS: Record<ExpenseRecurrence, string> = {
+  mensal: "Entra em todo mês a partir do mês de início",
+  parcelada: "Entra do mês de início até acabarem as parcelas",
+  unica: "Entra só no mês de início",
+}
 
 export type TaskStatus = "todo" | "doing" | "waiting" | "done"
 export type TaskPriority = "low" | "medium" | "high"

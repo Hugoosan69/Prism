@@ -69,6 +69,7 @@
   --color-spec-arquivos: var(--spec-arquivos);
   --color-spec-notas: var(--spec-notas);
   --color-spec-favoritos: var(--spec-favoritos);
+  --color-spec-financas: var(--spec-financas);
   --color-status-todo: var(--status-todo);
   --color-status-doing: var(--status-doing);
   --color-status-waiting: var(--status-waiting);
@@ -91,6 +92,8 @@
   --spec-arquivos: oklch(0.66 0.1 155);
   --spec-notas: oklch(0.66 0.11 300);
   --spec-favoritos: oklch(0.66 0.12 18);
+  /* Verde dinheiro, mas dessaturado como os outros: não compete com o texto. */
+  --spec-financas: oklch(0.64 0.11 145);
 
   --background: oklch(0.995 0.002 265);
   --foreground: oklch(0.21 0.012 265);
@@ -139,6 +142,7 @@
   --spec-arquivos: oklch(0.74 0.11 155);
   --spec-notas: oklch(0.73 0.12 300);
   --spec-favoritos: oklch(0.72 0.13 18);
+  --spec-financas: oklch(0.72 0.12 145);
 
   /* Base fria, não cinza morto: dá profundidade ao dark sem virar azul */
   --background: oklch(0.155 0.008 265);
