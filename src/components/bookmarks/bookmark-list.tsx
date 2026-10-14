@@ -109,7 +109,7 @@ export function BookmarkList({ initialBookmarks, openNew }: Props) {
                   return (
                     <div
                       key={bookmark.id}
-                      className="group flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-primary/30"
+                      className="group flex items-center gap-3 border-2 border-border bg-card p-3 transition-colors hover:border-ring/30"
                     >
                       <a
                         href={bookmark.url}

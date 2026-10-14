@@ -298,7 +298,7 @@ export function TaskDialog({
             onClick={() => setHighlighted((v) => !v)}
             aria-pressed={highlighted}
             className={cn(
-              "flex w-full items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+              "flex w-full items-center gap-2.5 border-2 border-border px-3 py-2.5 text-left text-sm transition-colors",
               highlighted
                 ? "border-amber-400/50 bg-amber-400/10"
                 : "hover:bg-muted/50"

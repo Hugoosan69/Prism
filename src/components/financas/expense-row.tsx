@@ -29,18 +29,18 @@ export function ExpenseRow({
 
   return (
     <div
-      className={`group/row flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
-        pago ? "bg-muted/40" : "hover:bg-muted/40"
+      className={`group/row flex items-center gap-3 border-2 px-3 py-2.5 transition-colors ${
+        pago ? "border-[#23263f] bg-[#0a0b16]" : "border-[#2b3060] bg-[#0e1022] hover:bg-retro-elevated"
       }`}
     >
       <button
         onClick={onTogglePago}
         aria-label={pago ? `Desmarcar ${expense.description}` : `Marcar ${expense.description} como paga`}
         aria-pressed={pago}
-        className={`flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+        className={`flex size-5 shrink-0 items-center justify-center border-2 transition-colors ${
           pago
-            ? "border-spec-financas bg-spec-financas text-background"
-            : "border-muted-foreground/40 hover:border-foreground"
+            ? "border-retro-green bg-retro-green text-[#07140c]"
+            : "border-[#4a4f72] hover:border-foreground"
         }`}
       >
         {pago && <Check className="size-3.5" strokeWidth={3} />}
@@ -56,7 +56,7 @@ export function ExpenseRow({
           >
             {expense.description}
           </p>
-          <p className="flex items-center gap-2 font-mono text-[11px] text-muted-foreground">
+          <p className="flex items-center gap-2 font-pixel text-[7px] text-muted-foreground">
             <span>{EXPENSE_KIND_LABELS[expense.kind as ExpenseKind] ?? expense.kind}</span>
             {parcela && (
               <span>
@@ -67,8 +67,8 @@ export function ExpenseRow({
           </p>
         </div>
         <span
-          className={`shrink-0 font-mono text-sm tabular-nums ${
-            pago ? "text-muted-foreground" : ""
+          className={`shrink-0 font-pixel text-[10px] tabular-nums ${
+            pago ? "text-[#6b7199]" : ""
           }`}
         >
           {formatarReal(valor)}

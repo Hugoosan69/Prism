@@ -117,7 +117,7 @@ export function IncomeBlock({
   }
 
   const formulario = (
-    <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-background p-2">
+    <div className="flex flex-wrap items-center gap-2 border-2 border-border bg-background p-2">
       <Input
         value={rascunho.description}
         onChange={(e) => setRascunho({ ...rascunho, description: e.target.value })}
@@ -137,7 +137,7 @@ export function IncomeBlock({
         onClick={() => setRascunho({ ...rascunho, recurring: !rascunho.recurring })}
         aria-pressed={rascunho.recurring}
         title="Repete todo mês a partir deste"
-        className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] transition-colors ${
+        className={`flex items-center gap-1 border-2 border-border px-2 py-1 text-[11px] transition-colors ${
           rascunho.recurring
             ? "border-foreground/30 bg-muted text-foreground"
             : "text-muted-foreground hover:text-foreground"
@@ -169,7 +169,7 @@ export function IncomeBlock({
         ) : (
           <div
             key={income.id}
-            className="group/inc flex items-center gap-3 rounded-lg border px-3 py-2 transition-colors hover:bg-muted/40"
+            className="group/inc flex items-center gap-3 border-2 border-[#23263f] bg-[#0a0b16] px-3 py-2 transition-colors hover:bg-retro-elevated"
           >
             <button
               onClick={() => abrirEdicao(income)}
@@ -184,7 +184,7 @@ export function IncomeBlock({
                   aria-label="Repete todo mês"
                 />
               )}
-              <span className="shrink-0 font-mono text-sm tabular-nums">
+              <span className="shrink-0 font-pixel text-[10px] tabular-nums text-retro-green">
                 {formatarReal(income.amount)}
               </span>
             </button>

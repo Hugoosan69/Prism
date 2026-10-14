@@ -162,7 +162,7 @@ export function NoteEditor({ note }: { note: Note }) {
   )
 
   const preview = (
-    <div className="h-full overflow-auto rounded-lg border bg-card p-5">
+    <div className="h-full overflow-auto border-2 border-border bg-card p-5">
       <MarkdownPreview content={content} />
     </div>
   )
@@ -206,7 +206,7 @@ export function NoteEditor({ note }: { note: Note }) {
         </Button>
 
         {/* Escrever · Escrever e ver · Ler */}
-        <div className="flex items-center gap-0.5 rounded-lg border bg-muted/40 p-0.5">
+        <div className="flex items-center gap-0.5 border-2 border-border bg-muted/40 p-0.5">
           {VIEWS.map((item) => (
             <Button
               key={item.value}

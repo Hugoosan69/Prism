@@ -117,7 +117,7 @@ export function MemoryManager() {
       {memorias.map((memoria) => (
         <div
           key={memoria.id}
-          className="group/mem rounded-lg border bg-background p-3"
+          className="group/mem border-2 border-border bg-background p-3"
         >
           <div className="flex items-center gap-2">
             {memoria.kind === "jeito" ? (

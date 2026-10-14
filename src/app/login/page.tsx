@@ -152,7 +152,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border bg-card p-7 shadow-sm">
+          <div className="border-2 border-border bg-card p-7 retro-shadow">
             {mode === "recuperar" && (
               <div className="mb-6 space-y-1">
                 <h2 className="text-base font-semibold">Recuperar senha</h2>
@@ -230,12 +230,12 @@ export default function LoginPage() {
 
               <div aria-live="polite" className="space-y-2 empty:hidden">
                 {error && (
-                  <p className="rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                  <p className="border-2 border-destructive/25 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                     {error}
                   </p>
                 )}
                 {notice && (
-                  <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  <p className="border-2 border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
                     {notice}
                   </p>
                 )}

@@ -194,7 +194,7 @@ export function MonthView({
           >
             <ChevronLeft className="size-4" />
           </Button>
-          <span className="min-w-44 text-center text-sm font-medium first-letter:uppercase">
+          <span className="min-w-44 text-center font-pixel text-[10px] tracking-[1px] uppercase">
             {rotuloDoMes(mes)}
           </span>
           <Button
@@ -236,7 +236,7 @@ export function MonthView({
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+            <h2 className="font-pixel text-[9px] tracking-[1px] text-muted-foreground uppercase">
               Despesas
             </h2>
             <Button
@@ -254,7 +254,7 @@ export function MonthView({
           </div>
 
           {linhas.length === 0 ? (
-            <p className="rounded-lg border border-dashed px-4 py-8 text-center text-xs text-muted-foreground">
+            <p className="border-2 border-dashed border-border px-4 py-8 text-center text-xs text-muted-foreground">
               Nenhuma despesa neste mês.
             </p>
           ) : (
@@ -276,7 +276,7 @@ export function MonthView({
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+          <h2 className="font-pixel text-[9px] tracking-[1px] text-muted-foreground uppercase">
             Proventos
           </h2>
           <IncomeBlock incomes={proventos} mes={mes} onChange={setIncomes} />
@@ -336,13 +336,13 @@ function Numero({
   destaque?: boolean
 }) {
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <p className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+    <div className={`border-2 p-4 retro-shadow ${destaque ? "border-[#2d6b3f] bg-[#0d1a12]" : "border-border bg-retro-panel"}`}>
+      <p className="font-pixel text-[8px] tracking-[1px] text-muted-foreground uppercase">
         {rotulo}
       </p>
       <p
-        className={`mt-1 font-mono text-lg tabular-nums ${
-          destaque && valor < 0 ? "text-destructive" : ""
+        className={`mt-2 font-pixel text-[17px] tabular-nums ${
+          destaque && valor >= 0 ? "text-retro-green" : destaque && valor < 0 ? "text-destructive" : ""
         }`}
       >
         {formatarReal(valor)}

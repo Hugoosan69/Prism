@@ -59,7 +59,7 @@ const GROUPS: { format: Format; label: string; icon: typeof Bold }[][] = [
 
 export function EditorToolbar({ onFormat, disabled }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-lg border bg-muted/30 p-1">
+    <div className="flex flex-wrap items-center gap-0.5 border-2 border-border bg-muted/30 p-1">
       {GROUPS.map((group, index) => (
         <div key={index} className="flex items-center gap-0.5">
           {index > 0 && (

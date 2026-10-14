@@ -173,7 +173,7 @@ export function SnippetLibrary({
           {filtered.map((snippet) => (
             <div
               key={snippet.id}
-              className="space-y-2 rounded-lg border bg-card p-4"
+              className="space-y-2 border-2 border-border bg-card p-4"
             >
               <div className="flex items-start gap-2">
                 <div className="flex-1 space-y-0.5">

@@ -37,7 +37,7 @@ export function Composer({
 
   return (
     <div>
-      <div className="rounded-2xl border bg-card shadow-sm transition-colors focus-within:border-ring">
+      <div className="border-2 border-[#2b3060] bg-retro-panel retro-shadow transition-colors focus-within:border-ring">
         <Textarea
           ref={ref}
           value={value}
@@ -51,28 +51,23 @@ export function Composer({
           disabled={disabled}
           rows={1}
           placeholder="Pergunte alguma coisa…"
-          // field-sizing-fixed: sem isso o Textarea do shadcn cresce sem teto e
-          // empurra os botões para fora da tela num texto longo.
           className="field-sizing-fixed max-h-56 min-h-11 resize-none border-0 bg-transparent px-4 py-3 text-[15px] shadow-none focus-visible:ring-0"
         />
 
-        <div className="flex items-center gap-2 px-3 pb-2.5">
-          {/* As três aparecem sempre, ligadas ou não. Esconder a que está
-              desligada faz um recurso sumir sem deixar rastro, e a pergunta
-              vira "o que foi que quebrou?" em vez de "falta a chave". */}
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Fonte ligada icone={Database} nome="Prism" porque="Suas consultas, notas, tarefas e links" />
-            <Fonte
+        <div className="flex flex-wrap items-center gap-2 px-3 pb-2.5">
+          <div className="flex items-center gap-2">
+            <FonteRetro ligada icone={Database} nome="PRISM" porque="Suas consultas, notas, tarefas e links" />
+            <FonteRetro
               ligada={sources.cofre}
               icone={BookOpen}
-              nome="Cofre"
+              nome="COFRE"
               porque="Segundo Cérebro, no Google Drive"
               seDesligada="Desligado: faltam GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET ou GOOGLE_REFRESH_TOKEN no ambiente onde o Prism está rodando."
             />
-            <Fonte
+            <FonteRetro
               ligada={sources.web}
               icone={Globe}
-              nome="Web"
+              nome="WEB"
               porque="Busca na web"
               seDesligada="Desligado: sem chave da Tavily, nem em Configurações nem no ambiente."
             />
@@ -81,14 +76,14 @@ export function Composer({
           <div className="ml-auto">
             {streaming ? (
               <span className="flex items-center gap-2">
-                <span className="text-[11px] text-muted-foreground">
+                <span className="font-pixel text-[8px] text-muted-foreground">
                   respondendo…
                 </span>
                 <button
                   onClick={onStop}
                   aria-label="Parar resposta"
                   title="Parar resposta"
-                  className="flex size-8 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted/70"
+                  className="flex size-8 items-center justify-center border-2 border-border bg-muted text-foreground transition-colors hover:bg-muted/70"
                 >
                   <Square className="size-3 fill-current" />
                 </button>
@@ -98,9 +93,9 @@ export function Composer({
                 onClick={onSend}
                 disabled={disabled || !value.trim()}
                 aria-label="Enviar"
-                className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-30"
+                className="bg-retro-green border-2 border-[#3fae59] text-[#07140c] font-pixel text-[9px] px-3 py-2 retro-shadow transition-opacity hover:brightness-110 disabled:opacity-30"
               >
-                <ArrowUp className="size-4" />
+                ENVIAR
               </button>
             )}
           </div>
@@ -122,7 +117,7 @@ export function Composer({
  * A desligada continua na linha, apagada e riscada, com o motivo no title. É a
  * diferença entre descobrir que falta uma chave e achar que o chat quebrou.
  */
-function Fonte({
+function FonteRetro({
   ligada,
   icone: Icone,
   nome,
@@ -138,8 +133,10 @@ function Fonte({
   return (
     <span
       title={ligada ? porque : (seDesligada ?? porque)}
-      className={`flex items-center gap-1 text-[11px] ${
-        ligada ? "" : "text-muted-foreground/40 line-through decoration-1"
+      className={`inline-flex items-center gap-1.5 font-pixel text-[8px] px-2 py-1.5 border-2 ${
+        ligada
+          ? "border-[#2d6b3f] text-retro-green"
+          : "border-[#23263f] text-[#4a4f72] line-through decoration-1"
       }`}
     >
       <Icone className="size-3" />

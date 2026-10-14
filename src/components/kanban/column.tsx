@@ -33,7 +33,7 @@ export function KanbanColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col gap-2 overflow-hidden rounded-xl border bg-muted/30 transition-colors",
+        "flex flex-col gap-2 overflow-hidden border-2 border-border bg-muted/30 transition-colors",
         isOver && "border-primary/40 bg-muted/60"
       )}
     >
@@ -44,11 +44,11 @@ export function KanbanColumn({
         style={{ background: color }}
       />
       <div className="flex items-center justify-between px-3 pt-0.5">
-        <span className="text-[13px] font-medium" title={hint}>
+        <span className="font-pixel text-[8px] tracking-[1px] uppercase" title={hint}>
           {title}
         </span>
         <span
-          className="font-mono text-[11px] tabular-nums"
+          className="font-pixel text-[8px] tabular-nums"
           style={{ color }}
         >
           {tasks.length}

@@ -253,7 +253,7 @@ export function ProposalCard({
 
   return (
     <div
-      className={`my-3 overflow-hidden rounded-xl border transition-opacity ${
+      className={`my-3 overflow-hidden border-2 border-border transition-opacity ${
         status === "recusada" || status === "desfeita" ? "opacity-50" : ""
       }`}
     >

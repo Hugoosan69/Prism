@@ -55,8 +55,7 @@ export function WelcomeScreen({
       <div className="w-full max-w-2xl">
         <div className="mb-7 flex items-center justify-center gap-2.5">
           <PrismMark className="size-7" />
-          <h1 className="text-2xl font-medium tracking-tight">
-            {/* Sem a hora ainda, mostra só o nome: evita piscar a saudação errada. */}
+          <h1 className="font-pixel text-[14px] tracking-[1px]">
             {hora === null ? "Olá, Hugo" : `${saudacao(hora)}, Hugo`}
           </h1>
         </div>
@@ -80,7 +79,7 @@ export function WelcomeScreen({
               <button
                 key={label}
                 onClick={() => onPick(prompt)}
-                className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="flex items-center gap-1.5 border-2 border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Icon className="size-3.5" />
                 {label}

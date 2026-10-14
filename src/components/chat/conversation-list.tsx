@@ -136,7 +136,7 @@ export function ConversationList({
         <Link
           href="/chat"
           onClick={onNavigate}
-          className="flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm transition-colors hover:bg-muted"
+          className="flex items-center gap-2 border-2 border-border px-2.5 py-1.5 text-sm transition-colors hover:bg-muted"
         >
           <PenSquare className="size-3.5 text-muted-foreground" />
           Nova conversa

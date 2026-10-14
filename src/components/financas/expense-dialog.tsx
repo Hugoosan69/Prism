@@ -260,7 +260,7 @@ function Escolha({
       type="button"
       onClick={onClick}
       aria-pressed={ativo}
-      className={`rounded-lg border px-2.5 py-1 text-xs transition-colors ${
+      className={`border-2 border-border px-2.5 py-1 text-xs transition-colors ${
         ativo
           ? "border-foreground/30 bg-muted font-medium text-foreground"
           : "text-muted-foreground hover:text-foreground"

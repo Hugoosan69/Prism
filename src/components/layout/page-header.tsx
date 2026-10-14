@@ -17,10 +17,10 @@ export function PageHeader({ title, meta, children }: Props) {
     <div className="mb-6 flex items-center gap-3">
       <span
         aria-hidden
-        className="h-5 w-[3px] shrink-0 rounded-full"
+        className="h-5 w-[3px] shrink-0"
         style={{ background: accent }}
       />
-      <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
+      <h1 className="font-pixel text-[13px] tracking-[1px] uppercase">{title}</h1>
       {meta && (
         <span className="font-mono text-xs text-muted-foreground">{meta}</span>
       )}

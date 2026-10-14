@@ -71,7 +71,7 @@ export function NotesList({ notes }: { notes: NoteSummary[] }) {
             <Link
               key={note.id}
               href={`/notas/${note.id}`}
-              className="group space-y-2 rounded-lg border bg-card p-4 transition-colors hover:border-primary/30"
+              className="group space-y-2 border-2 border-border bg-card p-4 transition-colors hover:border-ring/30"
             >
               <div className="flex items-center gap-2">
                 <span className="flex-1 truncate font-medium">

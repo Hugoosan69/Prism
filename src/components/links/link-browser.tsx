@@ -307,7 +307,7 @@ export function LinkBrowser({
       </div>
 
       {vazio ? (
-        <div className="rounded-xl border border-dashed py-16 text-center">
+        <div className="border-2 border-dashed border-border py-16 text-center">
           <p className="text-sm text-muted-foreground">
             {search
               ? "Nada encontrado nesta pasta."
@@ -319,7 +319,7 @@ export function LinkBrowser({
           {/* Pastas: cartões, para separar do que é conteúdo final */}
           {filteredFolders.length > 0 && (
             <section className="space-y-2.5">
-              <h2 className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+              <h2 className="font-pixel text-[8px] tracking-[1px] text-muted-foreground uppercase">
                 Pastas
               </h2>
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -328,7 +328,7 @@ export function LinkBrowser({
                   return (
                     <div
                       key={folder.id}
-                      className="group relative flex items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:border-foreground/20"
+                      className="group relative flex items-center gap-3 border-2 border-border bg-card p-3.5 transition-colors hover:border-foreground/20"
                     >
                       <div
                         className="flex size-9 shrink-0 items-center justify-center rounded-lg"
@@ -351,7 +351,7 @@ export function LinkBrowser({
                         <span className="block truncate text-sm font-medium">
                           {folder.name}
                         </span>
-                        <span className="font-mono text-[11px] text-muted-foreground">
+                        <span className="font-pixel text-[8px] text-muted-foreground">
                           {count} {count === 1 ? "item" : "itens"}
                         </span>
                       </button>
@@ -413,10 +413,10 @@ export function LinkBrowser({
           {/* Links: lista com respiro, origem à direita */}
           {filteredLinks.length > 0 && (
             <section className="space-y-2.5">
-              <h2 className="font-mono text-[11px] tracking-wider text-muted-foreground uppercase">
+              <h2 className="font-pixel text-[8px] tracking-[1px] text-muted-foreground uppercase">
                 Links
               </h2>
-              <div className="overflow-hidden rounded-xl border divide-y">
+              <div className="overflow-hidden border-2 border-border divide-y">
                 {filteredLinks.map((link) => {
                   const source = sourceForUrl(link.url)
                   return (
@@ -448,7 +448,7 @@ export function LinkBrowser({
                         </span>
                       </a>
 
-                      <span className="relative hidden shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:block">
+                      <span className="relative hidden shrink-0 rounded-md bg-muted px-1.5 py-0.5 font-pixel text-[7px] text-muted-foreground sm:block">
                         {source.label}
                       </span>
 
