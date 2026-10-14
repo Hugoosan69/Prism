@@ -1,16 +1,17 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Space_Grotesk, Press_Start_2P } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
-const geistSans = Geist({
+const spaceGrotesk = Space_Grotesk({
   variable: "--font-sans",
   subsets: ["latin"],
 })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const pressStart2P = Press_Start_2P({
+  variable: "--font-pixel",
+  weight: "400",
   subsets: ["latin"],
 })
 
@@ -25,12 +26,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    // As variáveis de fonte precisam ficar no <html>: é nele que o CSS base
-    // aplica font-sans. Declaradas no <body>, não resolvem e a tipografia
-    // inteira cai no fallback serifado do navegador.
     <html
       lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${spaceGrotesk.variable} ${pressStart2P.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">

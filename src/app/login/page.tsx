@@ -94,17 +94,17 @@ export default function LoginPage() {
       <div className="grid w-full max-w-4xl items-center gap-12 lg:grid-cols-[1fr_22rem] lg:gap-20">
         {/* Manifesto: o que existe atrás desta porta */}
         <aside className="hidden lg:block">
-          <p className="prism-rise font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
+          <p className="prism-rise font-pixel text-[8px] tracking-[1px] text-muted-foreground uppercase">
             Organizador pessoal
           </p>
-          <h1 className="prism-rise mt-3 text-4xl font-semibold tracking-tight [--rise-delay:60ms]">
+          <h1 className="prism-rise mt-3 font-pixel text-[18px] tracking-[1px] [--rise-delay:60ms]">
             Prism
           </h1>
 
           {/* Luz branca aberta no espectro: a régua que nomeia o produto */}
           <div
             aria-hidden
-            className="prism-beam prism-spectrum mt-5 h-[3px] w-44 rounded-full"
+            className="prism-beam prism-spectrum mt-5 h-[3px] w-44"
             style={{ animationDelay: "120ms" }}
           />
 
@@ -121,7 +121,7 @@ export default function LoginPage() {
               >
                 <span
                   aria-hidden
-                  className="h-3 w-[3px] shrink-0 translate-y-px rounded-full"
+                  className="h-3 w-[3px] shrink-0 translate-y-px"
                   style={{ background: item.accent }}
                 />
                 <span className="w-24 shrink-0 text-sm font-medium">
