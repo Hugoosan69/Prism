@@ -8,7 +8,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-retro-green border-[#3fae59] text-[#07140c] retro-shadow hover:brightness-110",
+        default: "bg-retro-green border-retro-green/80 text-primary-foreground retro-shadow hover:brightness-110",
         outline:
           "border-border bg-transparent hover:bg-muted hover:text-foreground",
         secondary:
@@ -16,7 +16,7 @@ const buttonVariants = cva(
         ghost:
           "border-transparent hover:bg-muted hover:text-foreground",
         destructive:
-          "bg-transparent border-[#6b2a2a] text-destructive hover:bg-destructive/10",
+          "bg-transparent border-destructive/30 text-destructive hover:bg-destructive/10",
         link: "border-transparent text-primary underline-offset-4 hover:underline",
       },
       size: {

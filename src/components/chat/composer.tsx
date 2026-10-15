@@ -37,7 +37,7 @@ export function Composer({
 
   return (
     <div>
-      <div className="border-2 border-[#2b3060] bg-retro-panel retro-shadow transition-colors focus-within:border-ring">
+      <div className="border-2 border-retro-border-strong bg-retro-panel retro-shadow transition-colors focus-within:border-ring">
         <Textarea
           ref={ref}
           value={value}
@@ -93,7 +93,7 @@ export function Composer({
                 onClick={onSend}
                 disabled={disabled || !value.trim()}
                 aria-label="Enviar"
-                className="bg-retro-green border-2 border-[#3fae59] text-[#07140c] font-pixel text-[9px] px-3 py-2 retro-shadow transition-opacity hover:brightness-110 disabled:opacity-30"
+                className="bg-retro-green border-2 border-retro-green/80 text-primary-foreground font-pixel text-[9px] px-3 py-2 retro-shadow transition-opacity hover:brightness-110 disabled:opacity-30"
               >
                 ENVIAR
               </button>
@@ -135,8 +135,8 @@ function FonteRetro({
       title={ligada ? porque : (seDesligada ?? porque)}
       className={`inline-flex items-center gap-1.5 font-pixel text-[8px] px-2 py-1.5 border-2 ${
         ligada
-          ? "border-[#2d6b3f] text-retro-green"
-          : "border-[#23263f] text-[#4a4f72] line-through decoration-1"
+          ? "border-retro-green/30 text-retro-green"
+          : "border-retro-border-muted text-retro-kind-fixa line-through decoration-1"
       }`}
     >
       <Icone className="size-3" />

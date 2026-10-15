@@ -340,7 +340,7 @@ function Numero({
   destaque?: boolean
 }) {
   return (
-    <div className={`border-2 p-4 retro-shadow ${destaque ? "border-[#2d6b3f] bg-[#0d1a12]" : "border-border bg-retro-panel"}`}>
+    <div className={`border-2 p-4 retro-shadow ${destaque ? "border-retro-green/30 bg-retro-green/5" : "border-border bg-retro-panel"}`}>
       <p className="font-pixel text-[8px] tracking-[1px] text-muted-foreground uppercase">
         {rotulo}
       </p>
@@ -375,7 +375,7 @@ function BarraPago({ pago, total }: { pago: number; total: number }) {
         {Array.from({ length: blocos }, (_, i) => (
           <span
             key={i}
-            className={`h-3.5 flex-1 ${i < cheios ? "bg-retro-green" : "bg-[#1b1f3d]"}`}
+            className={`h-3.5 flex-1 ${i < cheios ? "bg-retro-green" : "bg-retro-border-muted"}`}
           />
         ))}
       </div>

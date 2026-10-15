@@ -26,7 +26,7 @@ export function MessageBubble({
   if (message.role === "user") {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] bg-retro-elevated border-2 border-[#2b3060] retro-shadow px-4 py-2.5 text-[15px] break-words whitespace-pre-wrap">
+        <div className="max-w-[85%] bg-retro-elevated border-2 border-retro-border-strong retro-shadow px-4 py-2.5 text-[15px] break-words whitespace-pre-wrap">
           {message.content}
         </div>
       </div>

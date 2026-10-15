@@ -20,6 +20,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { CHAT_ITEM, DEFAULT_MODULE_ITEMS, type NavItem } from "@/lib/navigation"
+import { useModuleConfig } from "@/lib/use-module-config"
 import { IconSettings } from "@/components/brand/pixel-icons"
 import { PrismMark } from "@/components/brand/prism-mark"
 
@@ -44,7 +45,7 @@ function ModuleGroup({
           {label}
         </span>
         <span
-          className="ml-auto font-pixel text-[9px] text-[#5a6088] transition-transform"
+          className="ml-auto font-pixel text-[9px] text-retro-text-muted transition-transform"
           aria-hidden
         >
           <span className="block transition-transform group-data-[open]/module:rotate-0 -rotate-90">
@@ -52,8 +53,8 @@ function ModuleGroup({
           </span>
         </span>
       </CollapsibleTrigger>
-      <CollapsibleContent>
-        <SidebarMenu className="mt-2 gap-0.5 border-l-2 border-[#1b1f3d] ml-3 pl-2.5">
+      <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
+        <SidebarMenu className="mt-2 gap-0.5 border-l-2 border-retro-border-muted ml-3 pl-2.5">
           {items.map((item) => {
             const isActive = pathname.startsWith(item.href)
             return (
@@ -68,7 +69,7 @@ function ModuleGroup({
                     width={13}
                     height={13}
                     className="shrink-0"
-                    style={{ color: isActive ? color : "#6b7199" }}
+                    style={{ color: isActive ? color : "var(--retro-icon-muted)" }}
                   />
                   <span>{item.title}</span>
                 </SidebarMenuButton>
@@ -85,8 +86,9 @@ export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
 
-  const pessoal = DEFAULT_MODULE_ITEMS.filter((i) => i.module === "pessoal")
-  const trabalho = DEFAULT_MODULE_ITEMS.filter((i) => i.module === "trabalho")
+  const { moduleMap } = useModuleConfig()
+  const pessoal = DEFAULT_MODULE_ITEMS.filter((i) => (moduleMap[i.href] ?? i.module) === "pessoal")
+  const trabalho = DEFAULT_MODULE_ITEMS.filter((i) => (moduleMap[i.href] ?? i.module) === "trabalho")
 
   async function handleLogout() {
     const supabase = createClient()
@@ -121,7 +123,7 @@ export function AppSidebar() {
                   width={14}
                   height={14}
                   className="shrink-0"
-                  style={{ color: chatActive ? "var(--retro-green)" : "#6b7199" }}
+                  style={{ color: chatActive ? "var(--retro-green)" : "var(--retro-icon-muted)" }}
                 />
                 <span>{CHAT_ITEM.title}</span>
               </SidebarMenuButton>
@@ -156,7 +158,7 @@ export function AppSidebar() {
               render={<Link href="/configuracoes" />}
               className="gap-2.5 font-medium"
             >
-              <IconSettings width={13} height={13} className="shrink-0" style={{ color: "#6b7199" }} />
+              <IconSettings width={13} height={13} className="shrink-0" style={{ color: "var(--retro-icon-muted)" }} />
               <span>Configurações</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

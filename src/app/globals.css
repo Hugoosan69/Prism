@@ -73,60 +73,78 @@
   --color-retro-amber: var(--retro-amber);
   --color-retro-panel: var(--retro-panel);
   --color-retro-elevated: var(--retro-elevated);
+  --color-retro-border-strong: var(--retro-border-strong);
+  --color-retro-border-muted: var(--retro-border-muted);
+  --color-retro-surface-dim: var(--retro-surface-dim);
+  --color-retro-surface-sunken: var(--retro-surface-sunken);
+  --color-retro-text-muted: var(--retro-text-muted);
+  --color-retro-icon-muted: var(--retro-icon-muted);
+  --color-retro-amber-border: var(--retro-amber-border);
+  --color-retro-cyan: var(--retro-cyan);
+  --color-retro-kind-fixa: var(--retro-kind-fixa);
 }
 
 :root {
-  --status-todo: #d96a6a;
-  --status-doing: #e8b74a;
-  --status-waiting: #5fc8d9;
-  --status-done: #5a6088;
+  --status-todo: #c04040;
+  --status-doing: #b8900a;
+  --status-waiting: #1a8fa0;
+  --status-done: #8a90b0;
 
-  --retro-green: #5fd97a;
-  --retro-amber: #e8b74a;
-  --retro-panel: #0b0c1a;
-  --retro-elevated: #15183a;
+  --retro-green: #2a9e44;
+  --retro-amber: #b8900a;
+  --retro-panel: #f4f5f8;
+  --retro-elevated: #e8eaef;
 
-  --spec-chat: #5fd97a;
-  --spec-dashboard: #5fc8d9;
-  --spec-kanban: #e8b74a;
-  --spec-sql: #5fc8d9;
-  --spec-arquivos: #e8b74a;
-  --spec-notas: #9b8cd9;
-  --spec-favoritos: #d96a6a;
-  --spec-financas: #5fd97a;
+  --spec-chat: #2a9e44;
+  --spec-dashboard: #1a8fa0;
+  --spec-kanban: #b8900a;
+  --spec-sql: #1a8fa0;
+  --spec-arquivos: #b8900a;
+  --spec-notas: #7160b8;
+  --spec-favoritos: #c04040;
+  --spec-financas: #2a9e44;
 
-  --background: #080910;
-  --foreground: #e8eaf4;
-  --card: #0b0c1a;
-  --card-foreground: #e8eaf4;
-  --popover: #15183a;
-  --popover-foreground: #e8eaf4;
-  --primary: #e8eaf4;
-  --primary-foreground: #080910;
-  --secondary: #15183a;
-  --secondary-foreground: #e8eaf4;
-  --muted: #12142c;
-  --muted-foreground: #9aa0bd;
-  --accent: #15183a;
-  --accent-foreground: #e8eaf4;
-  --destructive: #d96a6a;
-  --border: #262a4d;
-  --input: #262a4d;
-  --ring: #5fd97a;
-  --chart-1: #5fd97a;
-  --chart-2: #e8b74a;
-  --chart-3: #5fc8d9;
-  --chart-4: #9b8cd9;
-  --chart-5: #d96a6a;
+  --background: #f8f9fc;
+  --foreground: #1a1c2e;
+  --card: #ffffff;
+  --card-foreground: #1a1c2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1c2e;
+  --primary: #1a1c2e;
+  --primary-foreground: #f8f9fc;
+  --secondary: #e8eaef;
+  --secondary-foreground: #1a1c2e;
+  --muted: #edeef3;
+  --muted-foreground: #6b7199;
+  --accent: #e8eaef;
+  --accent-foreground: #1a1c2e;
+  --destructive: #c04040;
+  --border: #d0d3e0;
+  --input: #d0d3e0;
+  --ring: #2a9e44;
+  --chart-1: #2a9e44;
+  --chart-2: #b8900a;
+  --chart-3: #1a8fa0;
+  --chart-4: #7160b8;
+  --chart-5: #c04040;
+  --retro-border-strong: #b8bcc8;
+  --retro-border-muted: #d8dae4;
+  --retro-surface-dim: #edeef3;
+  --retro-surface-sunken: #f0f1f5;
+  --retro-text-muted: #6b7199;
+  --retro-icon-muted: #8890b0;
+  --retro-amber-border: #c8a040;
+  --retro-cyan: #1a8fa0;
+  --retro-kind-fixa: #8890b0;
   --radius: 0px;
-  --sidebar: #0b0c1a;
-  --sidebar-foreground: #e8eaf4;
-  --sidebar-primary: #5fd97a;
-  --sidebar-primary-foreground: #080910;
-  --sidebar-accent: #15183a;
-  --sidebar-accent-foreground: #e8eaf4;
-  --sidebar-border: #262a4d;
-  --sidebar-ring: #5fd97a;
+  --sidebar: #f0f1f5;
+  --sidebar-foreground: #1a1c2e;
+  --sidebar-primary: #2a9e44;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8eaef;
+  --sidebar-accent-foreground: #1a1c2e;
+  --sidebar-border: #d0d3e0;
+  --sidebar-ring: #2a9e44;
 }
 
 .dark {
@@ -172,6 +190,15 @@
   --chart-3: #5fc8d9;
   --chart-4: #9b8cd9;
   --chart-5: #d96a6a;
+  --retro-border-strong: #2b3060;
+  --retro-border-muted: #1b1f3d;
+  --retro-surface-dim: #0a0b16;
+  --retro-surface-sunken: #0e1022;
+  --retro-text-muted: #5a6088;
+  --retro-icon-muted: #6b7199;
+  --retro-amber-border: #5c4a1c;
+  --retro-cyan: #5fc8d9;
+  --retro-kind-fixa: #4a4f72;
   --sidebar: #0b0c1a;
   --sidebar-foreground: #e8eaf4;
   --sidebar-primary: #5fd97a;
@@ -189,6 +216,8 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  .dark body {
     background-image: repeating-linear-gradient(
       0deg,
       rgba(255, 255, 255, 0.022) 0 1px,
@@ -214,6 +243,9 @@
     font-family: var(--font-pixel), "Press Start 2P", monospace;
   }
   .retro-shadow {
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.12);
+  }
+  .dark .retro-shadow {
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.4);
   }
   .prism-spectrum {

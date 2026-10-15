@@ -16,7 +16,7 @@ export function Topbar() {
       <Separator orientation="vertical" className="mr-1 h-4" />
       <button
         onClick={() => setSearchOpen(true)}
-        className="group flex h-8 w-full max-w-sm items-center gap-2 border-2 border-[#2b3060] bg-[#0e1022] px-2.5 text-left transition-colors hover:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="group flex h-8 w-full max-w-sm items-center gap-2 border-2 border-retro-border-strong bg-retro-surface-sunken px-2.5 text-left transition-colors hover:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         <Search className="size-3.5 shrink-0 text-muted-foreground" />
         <span className="flex-1 truncate text-sm text-muted-foreground">

@@ -169,7 +169,7 @@ export function IncomeBlock({
         ) : (
           <div
             key={income.id}
-            className="group/inc flex items-center gap-3 border-2 border-[#23263f] bg-[#0a0b16] px-3 py-2 transition-colors hover:bg-retro-elevated"
+            className="group/inc flex items-center gap-3 border-2 border-retro-border-muted bg-retro-surface-dim px-3 py-2 transition-colors hover:bg-retro-elevated"
           >
             <button
               onClick={() => abrirEdicao(income)}

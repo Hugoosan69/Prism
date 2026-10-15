@@ -50,8 +50,8 @@ export function PrismMark({ className }: { className?: string }) {
       {/* O balão ocupa o vazio do P: a letra vira conversa. A ponta sai por
           baixo, à direita, e é desenhada antes para o corpo do balão cobrir a
           emenda. */}
-      <path d="M57 38 L69 53 L68 38 Z" fill="#0b1030" />
-      <rect x="40" y="15" width="34" height="30" rx="12" fill="#0b1030" />
+      <path d="M57 38 L69 53 L68 38 Z" fill="var(--background)" />
+      <rect x="40" y="15" width="34" height="30" rx="12" fill="var(--background)" />
       <rect x="50" y="23" width="6" height="14" rx="3" fill="#fff" />
       <rect x="60" y="23" width="6" height="14" rx="3" fill="#fff" />
     </svg>
