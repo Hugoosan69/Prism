@@ -56,12 +56,13 @@ export function ExpenseRow({
           >
             {expense.description}
           </p>
-          <p className="flex items-center gap-2 font-pixel text-[7px] text-muted-foreground">
-            <span>{EXPENSE_KIND_LABELS[expense.kind as ExpenseKind] ?? expense.kind}</span>
+          <p className="flex items-center gap-2 font-pixel text-[7px]">
+            <span className={expense.kind === "variavel" ? "text-[#5fc8d9]" : "text-[#4a4f72]"}>
+              {(EXPENSE_KIND_LABELS[expense.kind as ExpenseKind] ?? expense.kind).toUpperCase()}
+            </span>
             {parcela && (
-              <span>
-                parcela {parcela.numero}/{parcela.total}
-                {faltam > 0 && ` · faltam ${faltam}`}
+              <span className="border-2 border-[#5c4a1c] px-1.5 py-0.5 font-pixel text-[8px] text-retro-amber">
+                {parcela.numero}/{parcela.total}
               </span>
             )}
           </p>

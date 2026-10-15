@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LogOut, Settings, ChevronDown } from "lucide-react"
+import { LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import {
   Sidebar,
@@ -20,6 +20,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { CHAT_ITEM, DEFAULT_MODULE_ITEMS, type NavItem } from "@/lib/navigation"
+import { IconSettings } from "@/components/brand/pixel-icons"
 import { PrismMark } from "@/components/brand/prism-mark"
 
 function ModuleGroup({
@@ -35,20 +36,24 @@ function ModuleGroup({
 }) {
   return (
     <Collapsible defaultOpen className="group/module">
-      <CollapsibleTrigger className="flex w-full items-center gap-2 px-3 py-1.5 group-data-[collapsible=icon]:hidden">
+      <CollapsibleTrigger className="flex w-full items-center gap-2 border-b-2 border-border px-3 pb-1.5 group-data-[collapsible=icon]:hidden">
         <span
-          className="font-pixel text-[8px] tracking-[1px] uppercase"
+          className="font-pixel text-[9px] tracking-[1px] uppercase"
           style={{ color }}
         >
           {label}
         </span>
-        <ChevronDown
-          className="ml-auto size-3 -rotate-90 transition-transform group-data-[open]/module:rotate-0"
-          style={{ color }}
-        />
+        <span
+          className="ml-auto font-pixel text-[9px] text-[#5a6088] transition-transform"
+          aria-hidden
+        >
+          <span className="block transition-transform group-data-[open]/module:rotate-0 -rotate-90">
+            ▼
+          </span>
+        </span>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <SidebarMenu className="gap-0.5 border-l-2 ml-3 pl-1" style={{ borderColor: `${color}33` }}>
+        <SidebarMenu className="mt-2 gap-0.5 border-l-2 border-[#1b1f3d] ml-3 pl-2.5">
           {items.map((item) => {
             const isActive = pathname.startsWith(item.href)
             return (
@@ -57,19 +62,13 @@ function ModuleGroup({
                   isActive={isActive}
                   tooltip={item.title}
                   render={<Link href={item.href} />}
-                  className="relative gap-2.5 font-medium"
+                  className="gap-2.5 font-medium"
                 >
-                  <span
-                    aria-hidden
-                    className="absolute top-1/2 left-0 h-4 w-[2px] -translate-y-1/2 transition-opacity"
-                    style={{
-                      background: color,
-                      opacity: isActive ? 1 : 0,
-                    }}
-                  />
                   <item.icon
-                    className="size-4"
-                    style={isActive ? { color } : undefined}
+                    width={13}
+                    height={13}
+                    className="shrink-0"
+                    style={{ color: isActive ? color : "#6b7199" }}
                   />
                   <span>{item.title}</span>
                 </SidebarMenuButton>
@@ -109,7 +108,6 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {/* Chat fica fora dos grupos */}
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -117,11 +115,13 @@ export function AppSidebar() {
                 isActive={chatActive}
                 tooltip={CHAT_ITEM.title}
                 render={<Link href={CHAT_ITEM.href} />}
-                className="gap-2.5 font-medium"
+                className={`gap-2.5 font-medium ${chatActive ? "border-2 border-retro-green bg-retro-elevated retro-shadow" : ""}`}
               >
                 <CHAT_ITEM.icon
-                  className="size-4"
-                  style={chatActive ? { color: "var(--retro-green)" } : undefined}
+                  width={14}
+                  height={14}
+                  className="shrink-0"
+                  style={{ color: chatActive ? "var(--retro-green)" : "#6b7199" }}
                 />
                 <span>{CHAT_ITEM.title}</span>
               </SidebarMenuButton>
@@ -156,7 +156,7 @@ export function AppSidebar() {
               render={<Link href="/configuracoes" />}
               className="gap-2.5 font-medium"
             >
-              <Settings className="size-4" />
+              <IconSettings width={13} height={13} className="shrink-0" style={{ color: "#6b7199" }} />
               <span>Configurações</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

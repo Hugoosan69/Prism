@@ -234,6 +234,10 @@ export function MonthView({
           <Numero rotulo="Saldo" valor={resumo.saldo} destaque />
         </div>
 
+        {resumo.despesas > 0 && (
+          <BarraPago pago={resumo.pago} total={resumo.despesas} />
+        )}
+
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-pixel text-[9px] tracking-[1px] text-muted-foreground uppercase">
@@ -350,6 +354,31 @@ function Numero({
       {apoio && (
         <p className="mt-0.5 text-[11px] text-muted-foreground">{apoio}</p>
       )}
+    </div>
+  )
+}
+
+function BarraPago({ pago, total }: { pago: number; total: number }) {
+  const pct = Math.round((pago / total) * 100)
+  const blocos = 10
+  const cheios = Math.round((pago / total) * blocos)
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-2.5">
+        <span className="font-pixel text-[8px] tracking-[1px] text-muted-foreground uppercase">
+          Pago no mês
+        </span>
+        <span className="font-pixel text-[8px] text-retro-green">{pct}%</span>
+      </div>
+      <div aria-hidden className="flex gap-[3px]">
+        {Array.from({ length: blocos }, (_, i) => (
+          <span
+            key={i}
+            className={`h-3.5 flex-1 ${i < cheios ? "bg-retro-green" : "bg-[#1b1f3d]"}`}
+          />
+        ))}
+      </div>
     </div>
   )
 }

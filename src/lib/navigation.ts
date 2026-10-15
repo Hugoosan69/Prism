@@ -1,21 +1,23 @@
+import type { ComponentType, SVGProps } from "react"
 import {
-  Bookmark,
-  Database,
-  MessageSquare,
-  FolderOpen,
-  LayoutDashboard,
-  SquareKanban,
-  StickyNote,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react"
+  IconChat,
+  IconDashboard,
+  IconFinancas,
+  IconNotas,
+  IconFavoritos,
+  IconKanban,
+  IconSQL,
+  IconLinks,
+} from "@/components/brand/pixel-icons"
+
+export type PixelIcon = ComponentType<SVGProps<SVGSVGElement>>
 
 export type NavModule = "pessoal" | "trabalho"
 
 export type NavItem = {
   title: string
   href: string
-  icon: LucideIcon
+  icon: PixelIcon
   accent: string
   module: NavModule
 }
@@ -23,7 +25,7 @@ export type NavItem = {
 export const CHAT_ITEM = {
   title: "Chat",
   href: "/chat",
-  icon: MessageSquare,
+  icon: IconChat,
   accent: "var(--retro-green)",
 } as const
 
@@ -31,49 +33,49 @@ export const DEFAULT_MODULE_ITEMS: NavItem[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: LayoutDashboard,
+    icon: IconDashboard,
     accent: "var(--spec-dashboard)",
     module: "pessoal",
   },
   {
     title: "Finanças",
     href: "/financas",
-    icon: Wallet,
+    icon: IconFinancas,
     accent: "var(--spec-financas)",
     module: "pessoal",
   },
   {
     title: "Notas",
     href: "/notas",
-    icon: StickyNote,
+    icon: IconNotas,
     accent: "var(--spec-notas)",
     module: "pessoal",
   },
   {
     title: "Favoritos",
     href: "/favoritos",
-    icon: Bookmark,
+    icon: IconFavoritos,
     accent: "var(--spec-favoritos)",
     module: "pessoal",
   },
   {
     title: "Kanban",
     href: "/kanban",
-    icon: SquareKanban,
+    icon: IconKanban,
     accent: "var(--spec-kanban)",
     module: "trabalho",
   },
   {
     title: "SQL",
     href: "/sql",
-    icon: Database,
+    icon: IconSQL,
     accent: "var(--spec-sql)",
     module: "trabalho",
   },
   {
     title: "Links",
     href: "/links",
-    icon: FolderOpen,
+    icon: IconLinks,
     accent: "var(--spec-arquivos)",
     module: "trabalho",
   },
