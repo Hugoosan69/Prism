@@ -1,23 +1,11 @@
 import Link from "next/link"
 import { Mail, MessageCircle, Plug, Settings } from "lucide-react"
 import { PageHeader } from "@/components/layout/page-header"
+import { WhatsappView } from "@/components/conversas/whatsapp-view"
 import { createClient } from "@/lib/supabase/server"
 import type { Integration } from "@/lib/types"
 
 export const dynamic = "force-dynamic"
-
-const STATUS_TONE: Record<string, string> = {
-  connected: "bg-success/15 text-success",
-  pending: "bg-warning/15 text-warning",
-  error: "bg-destructive/15 text-destructive",
-  disconnected: "bg-muted text-muted-foreground",
-}
-const STATUS_LABEL: Record<string, string> = {
-  connected: "Conectado",
-  pending: "Aguardando",
-  error: "Erro",
-  disconnected: "Desconectado",
-}
 
 export default async function ConversasPage() {
   const supabase = await createClient()
@@ -27,12 +15,41 @@ export default async function ConversasPage() {
     .in("type", ["waha", "gmail"])
     .order("created_at")
   const integrations = (data ?? []) as Integration[]
-  const connected = integrations.filter((i) => i.status === "connected")
+  const waha = integrations.find(
+    (i) => i.type === "waha" && i.status === "connected"
+  )
+  const gmail = integrations.find((i) => i.type === "gmail")
+  const gmailEmail = (gmail?.config as Record<string, string> | null)?.email
+
+  // Com WhatsApp conectado, a conversa é o conteúdo principal.
+  if (waha) {
+    return (
+      <div>
+        <PageHeader title="Conversas">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            {gmailEmail ? (
+              <span className="flex items-center gap-1">
+                <Mail className="size-3.5" />
+                {gmailEmail}
+              </span>
+            ) : null}
+            <Link
+              href="/configuracoes"
+              className="flex items-center gap-1 hover:text-foreground"
+            >
+              <Settings className="size-3.5" />
+              Integrações
+            </Link>
+          </div>
+        </PageHeader>
+        <WhatsappView integrationId={waha.id} />
+      </div>
+    )
+  }
 
   return (
     <div>
       <PageHeader title="Conversas" />
-
       {integrations.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card/40 px-6 py-16 text-center">
           <div className="flex size-12 items-center justify-center rounded-full bg-muted">
@@ -77,23 +94,17 @@ export default async function ConversasPage() {
                       {subtitle}
                     </p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                      STATUS_TONE[i.status] ?? STATUS_TONE.disconnected
-                    }`}
-                  >
-                    {STATUS_LABEL[i.status] ?? i.status}
+                  <span className="shrink-0 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium text-warning">
+                    {i.status === "connected" ? "Conectado" : "Pendente"}
                   </span>
                 </div>
               )
             })}
           </div>
-
           <div className="rounded-xl border border-dashed border-border bg-card/40 px-5 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              {connected.length > 0
-                ? "Conexões prontas. A leitura das mensagens dentro do Prism entra na próxima etapa (ingestão WAHA/Gmail)."
-                : "Conclua a conexão em Configurações (QR do WhatsApp ou login do Gmail) para liberar as conversas."}
+              Conclua a conexão em Configurações (QR do WhatsApp ou login do
+              Gmail) para abrir as conversas aqui.
             </p>
             <Link
               href="/configuracoes"

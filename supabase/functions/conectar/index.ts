@@ -81,6 +81,9 @@ Deno.serve(async (req) => {
     kind?: "integration" | "model"
     id?: string
     secret?: string
+    chatId?: string
+    text?: string
+    limit?: number
   }
   try {
     body = await req.json()
@@ -195,6 +198,76 @@ Deno.serve(async (req) => {
       })
       .eq("id", id)
     return json({ status, waStatus })
+  }
+
+  // Leitura e resposta de conversas do WhatsApp, direto do WAHA (sem webhook
+  // ainda): lista de chats, mensagens de um chat e envio de texto.
+  if (
+    action === "waha-chats" ||
+    action === "waha-messages" ||
+    action === "waha-send"
+  ) {
+    const row = await loadIntegration()
+    if (!row) return json({ error: "integração não encontrada" }, 404)
+    const cfg = (row.config ?? {}) as Record<string, string>
+    const base = (cfg.url ?? "").replace(/\/$/, "")
+    const key = row.secret_name
+      ? ((await admin.rpc("app_get_secret", { p_name: row.secret_name })).data ??
+        "")
+      : ""
+    if (!base || !key)
+      return json({ error: "Informe a URL do WAHA e a API key antes." }, 400)
+    const session = wahaSession(cfg)
+    const headers = { "X-Api-Key": key, "Content-Type": "application/json" }
+    const limit = body.limit ?? 30
+
+    try {
+      if (action === "waha-chats") {
+        // Overview traz nome + última mensagem; cai para /chats se não existir.
+        let res = await ping(
+          `${base}/api/${session}/chats/overview?limit=${limit}`,
+          { headers }
+        )
+        if (!res.ok)
+          res = await ping(`${base}/api/${session}/chats?limit=${limit}`, {
+            headers,
+          })
+        if (!res.ok) return json({ error: `WAHA HTTP ${res.status}` }, 502)
+        return json({ chats: await res.json() })
+      }
+
+      if (action === "waha-messages") {
+        if (!body.chatId) return json({ error: "faltou o chatId" }, 400)
+        const res = await ping(
+          `${base}/api/${session}/chats/${encodeURIComponent(
+            body.chatId
+          )}/messages?limit=${body.limit ?? 50}&downloadMedia=false`,
+          { headers }
+        )
+        if (!res.ok) return json({ error: `WAHA HTTP ${res.status}` }, 502)
+        return json({ messages: await res.json() })
+      }
+
+      // waha-send
+      if (!body.chatId || !body.text?.trim())
+        return json({ error: "faltou chatId ou texto" }, 400)
+      const res = await ping(`${base}/api/sendText`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          session,
+          chatId: body.chatId,
+          text: body.text,
+        }),
+      })
+      if (!res.ok) return json({ error: `WAHA HTTP ${res.status}` }, 502)
+      return json({ ok: true, message: await res.json() })
+    } catch (e) {
+      return json(
+        { error: e instanceof Error ? e.message : "falha WAHA" },
+        502
+      )
+    }
   }
 
   if (action === "testar") {
