@@ -1,13 +1,9 @@
 // Edge function "conectar": a única porta que toca o segredo.
-//
-// Duas ações, sempre com a service key (nunca a chave chega ao front):
-//  - "salvar-segredo": grava o segredo no Vault (via app_set_secret) e liga a
-//     flag has_secret/has_key + secret_name na linha. O valor não volta.
-//  - "testar": lê o segredo do Vault (app_get_secret) e faz uma chamada real ao
-//     provedor, refletindo o resultado no status da linha. O valor não volta.
-//
-// Autorização: exige um usuário autenticado (app de dono único, RLS já restringe
-// os dados). O segredo em si só é alcançável por esta função.
+//  - "salvar-segredo": grava o segredo no Vault (app_set_secret) e liga has_*.
+//  - "testar": lê o segredo (app_get_secret) e faz chamada real ao provedor.
+//  - "waha-qr": garante a sessão WAHA própria do Prism e devolve o QR (data URL).
+//  - "waha-status": lê o estado da sessão WAHA e reflete no status da integração.
+// O valor do segredo nunca volta ao front. Exige usuário autenticado (dono único + RLS).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4"
 
@@ -29,13 +25,12 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!
 
-/** Chamada externa com timeout, para o teste não travar a tela. */
 async function ping(
   url: string,
   init: RequestInit & { timeoutMs?: number } = {}
 ) {
   const ctrl = new AbortController()
-  const t = setTimeout(() => ctrl.abort(), init.timeoutMs ?? 10000)
+  const t = setTimeout(() => ctrl.abort(), init.timeoutMs ?? 12000)
   try {
     return await fetch(url, { ...init, signal: ctrl.signal })
   } finally {
@@ -43,11 +38,33 @@ async function ping(
   }
 }
 
+/** Nome da sessão WAHA do Prism (própria — nunca a do agente n8n). */
+function wahaSession(cfg: Record<string, string>) {
+  return cfg.session?.trim() || "prism"
+}
+
+/** Garante que a sessão exista e esteja iniciada. Tenta o REST atual e cai no antigo. */
+async function ensureWahaSession(base: string, session: string, key: string) {
+  const headers = { "X-Api-Key": key, "Content-Type": "application/json" }
+  // WAHA atual: cria+inicia num POST só (idempotente na prática; 4xx se já existe).
+  const novo = await ping(`${base}/api/sessions`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ name: session, start: true }),
+  }).catch(() => null)
+  if (novo && (novo.ok || novo.status === 422 || novo.status === 409)) return
+  // WAHA antigo: inicia por outro caminho.
+  await ping(`${base}/api/sessions/start`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ name: session }),
+  }).catch(() => null)
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors })
   if (req.method !== "POST") return json({ error: "método inválido" }, 405)
 
-  // Exige usuário autenticado.
   const authHeader = req.headers.get("Authorization") ?? ""
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
@@ -94,18 +111,106 @@ Deno.serve(async (req) => {
     return json({ ok: true })
   }
 
-  if (action === "testar") {
-    const { data: row, error: re } = await admin
-      .from(table)
+  // Ações do WhatsApp/WAHA: precisam da linha de integração + URL + chave.
+  async function loadIntegration() {
+    const { data } = await admin
+      .from("integrations")
       .select("*")
       .eq("id", id)
       .maybeSingle()
-    if (re || !row) return json({ error: "registro não encontrado" }, 404)
+    return data
+  }
 
-    const secretValue =
-      row[nameCol]
-        ? (await admin.rpc("app_get_secret", { p_name: row[nameCol] })).data
+  if (action === "waha-qr" || action === "waha-status") {
+    const row = await loadIntegration()
+    if (!row) return json({ error: "integração não encontrada" }, 404)
+    const cfg = (row.config ?? {}) as Record<string, string>
+    const base = (cfg.url ?? "").replace(/\/$/, "")
+    const key = row.secret_name
+      ? ((await admin.rpc("app_get_secret", { p_name: row.secret_name })).data ??
+        "")
+      : ""
+    if (!base || !key)
+      return json({ error: "Informe a URL do WAHA e a API key antes." }, 400)
+
+    const session = wahaSession(cfg)
+    const headers = { "X-Api-Key": key }
+
+    if (action === "waha-qr") {
+      await ensureWahaSession(base, session, key)
+      // Caminho de QR comum às versões; devolve imagem ou JSON {mimetype,data}.
+      const res = await ping(
+        `${base}/api/${session}/auth/qr?format=image`,
+        { headers }
+      ).catch(() => null)
+      if (!res || !res.ok) {
+        // Pode já estar conectado (sem QR) — confere o status.
+        const st = await ping(`${base}/api/sessions/${session}`, {
+          headers,
+        }).catch(() => null)
+        const waStatus = st && st.ok ? (await st.json()).status : null
+        if (waStatus === "WORKING") {
+          await admin
+            .from("integrations")
+            .update({ status: "connected", last_sync_at: new Date().toISOString() })
+            .eq("id", id)
+          return json({ status: "connected", message: "Já conectado." })
+        }
+        return json(
+          { error: `WAHA não devolveu o QR (HTTP ${res?.status ?? "s/resposta"}).` },
+          502
+        )
+      }
+      const ct = res.headers.get("content-type") ?? ""
+      let dataUrl: string
+      if (ct.includes("application/json")) {
+        const j = await res.json()
+        const mime = j.mimetype ?? "image/png"
+        dataUrl = `data:${mime};base64,${j.data ?? j.qr ?? ""}`
+      } else {
+        const buf = new Uint8Array(await res.arrayBuffer())
+        let bin = ""
+        for (const b of buf) bin += String.fromCharCode(b)
+        dataUrl = `data:${ct || "image/png"};base64,${btoa(bin)}`
+      }
+      await admin.from("integrations").update({ status: "pending" }).eq("id", id)
+      return json({ qr: dataUrl, status: "pending" })
+    }
+
+    // waha-status
+    const st = await ping(`${base}/api/sessions/${session}`, { headers }).catch(
+      () => null
+    )
+    if (!st || !st.ok)
+      return json({ error: `WAHA HTTP ${st?.status ?? "s/resposta"}` }, 502)
+    const waStatus = (await st.json()).status as string
+    const status = waStatus === "WORKING" ? "connected" : "pending"
+    await admin
+      .from("integrations")
+      .update({
+        status,
+        ...(status === "connected"
+          ? { last_sync_at: new Date().toISOString() }
+          : {}),
+      })
+      .eq("id", id)
+    return json({ status, waStatus })
+  }
+
+  if (action === "testar") {
+    const row = await loadIntegration()
+    const modelRow =
+      kind === "model"
+        ? (
+            await admin.from("ai_models").select("*").eq("id", id).maybeSingle()
+          ).data
         : null
+    const target = kind === "model" ? modelRow : row
+    if (!target) return json({ error: "registro não encontrado" }, 404)
+
+    const secretValue = target[nameCol]
+      ? (await admin.rpc("app_get_secret", { p_name: target[nameCol] })).data
+      : null
 
     let status = "error"
     let message = ""
@@ -115,7 +220,7 @@ Deno.serve(async (req) => {
         if (!secretValue) {
           message = "Configure a chave antes de testar."
         } else {
-          const base = String(row.base_url).replace(/\/$/, "")
+          const base = String(target.base_url).replace(/\/$/, "")
           const res = await ping(`${base}/models`, {
             headers: { Authorization: `Bearer ${secretValue}` },
           })
@@ -123,8 +228,8 @@ Deno.serve(async (req) => {
           message = res.ok ? "Modelo respondeu." : `HTTP ${res.status}`
         }
       } else {
-        const type = String(row.type)
-        const cfg = (row.config ?? {}) as Record<string, string>
+        const type = String(target.type)
+        const cfg = (target.config ?? {}) as Record<string, string>
         if (type === "waha") {
           if (!cfg.url || !secretValue) {
             status = "pending"
@@ -137,13 +242,14 @@ Deno.serve(async (req) => {
             status = res.ok ? "connected" : "error"
             message = res.ok ? "WAHA respondeu." : `HTTP ${res.status}`
           }
+        } else if (type === "gmail") {
+          status = cfg.email ? "connected" : "pending"
+          message = cfg.email
+            ? `Conta ${cfg.email} conectada.`
+            : "Clique em Conectar Gmail."
         } else {
-          // gmail (OAuth, Fase 2) e glpi (rede interna, Fase 3): preparados.
           status = "pending"
-          message =
-            type === "gmail"
-              ? "OAuth do Gmail é configurado na Fase 2."
-              : "GLPI é verificado na Fase 3."
+          message = "GLPI é verificado na Fase 3."
         }
       }
     } catch (e) {
