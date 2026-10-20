@@ -24,7 +24,7 @@ export type Integration = Tables<"integrations">
 export type AiModel = Tables<"ai_models">
 export type AiAssignment = Tables<"ai_assignments">
 
-export type IntegrationType = "waha" | "gmail" | "glpi" | "zoho"
+export type IntegrationType = "waha" | "gmail" | "glpi" | "zoho" | "chatwoot"
 export type IntegrationStatus =
   | "disconnected"
   | "connected"
@@ -42,6 +42,7 @@ export const INTEGRATION_TYPE_LABELS: Record<IntegrationType, string> = {
   gmail: "Gmail",
   glpi: "GLPI",
   zoho: "Zoho",
+  chatwoot: "Chatwoot",
 }
 
 export const INTEGRATION_STATUS_LABELS: Record<IntegrationStatus, string> = {

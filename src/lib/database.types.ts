@@ -874,6 +874,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      app_get_secret: { Args: { p_name: string }; Returns: string }
+      app_set_secret: {
+        Args: { p_name: string; p_secret: string }
+        Returns: undefined
+      }
       is_owner: { Args: never; Returns: boolean }
     }
     Enums: {

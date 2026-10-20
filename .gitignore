@@ -43,3 +43,7 @@ next-env.d.ts
 
 # Dados financeiros reais: repositorio publico
 scripts/financas.local.json
+
+# Claude Code local artifacts
+.agents/
+skills-lock.json

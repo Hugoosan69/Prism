@@ -190,13 +190,14 @@ export function IntegrationsManager() {
   return (
     <CadastroSection
       title="Integrações"
-      description="WhatsApp (WAHA), Gmail, GLPI e Zoho. O segredo vai cifrado para o Vault e nunca volta à tela — só o status."
+      description="WhatsApp (WAHA), Gmail, Chatwoot, GLPI e Zoho. O segredo vai cifrado para o Vault e nunca volta à tela — só o status."
     >
       {rows.length === 0 && <EmptyRow>Nenhuma integração.</EmptyRow>}
       {rows.map((i) => {
         const cfg = (i.config ?? {}) as Record<string, string>
         const isWaha = i.type === "waha"
         const isGmail = i.type === "gmail"
+        const isChatwoot = i.type === "chatwoot"
         return (
           <div key={i.id} className="space-y-2 rounded-lg border border-border p-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -256,6 +257,18 @@ export function IntegrationsManager() {
                   onBlur={(e) =>
                     patch(i.id, {
                       config: { ...cfg, session: e.target.value.trim() || "prism" },
+                    })
+                  }
+                />
+              )}
+              {isChatwoot && (
+                <Input
+                  defaultValue={cfg.account_id ?? ""}
+                  placeholder="Account ID"
+                  className="h-8 w-28"
+                  onBlur={(e) =>
+                    patch(i.id, {
+                      config: { ...cfg, account_id: e.target.value.trim() },
                     })
                   }
                 />

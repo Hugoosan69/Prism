@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Mail, MessageCircle, Plug, Settings } from "lucide-react"
 import { PageHeader } from "@/components/layout/page-header"
+import { ChatwootInbox } from "@/components/conversas/chatwoot-inbox"
 import { WhatsappView } from "@/components/conversas/whatsapp-view"
 import { createClient } from "@/lib/supabase/server"
 import type { Integration } from "@/lib/types"
@@ -12,16 +13,43 @@ export default async function ConversasPage() {
   const { data } = await supabase
     .from("integrations")
     .select("*")
-    .in("type", ["waha", "gmail"])
+    .in("type", ["waha", "gmail", "chatwoot"])
     .order("created_at")
   const integrations = (data ?? []) as Integration[]
+  const chatwoot = integrations.find(
+    (i) => i.type === "chatwoot" && i.status === "connected",
+  )
   const waha = integrations.find(
-    (i) => i.type === "waha" && i.status === "connected"
+    (i) => i.type === "waha" && i.status === "connected",
   )
   const gmail = integrations.find((i) => i.type === "gmail")
   const gmailEmail = (gmail?.config as Record<string, string> | null)?.email
 
-  // Com WhatsApp conectado, a conversa é o conteúdo principal.
+  if (chatwoot) {
+    return (
+      <div>
+        <PageHeader title="Conversas">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            {gmailEmail ? (
+              <span className="flex items-center gap-1">
+                <Mail className="size-3.5" />
+                {gmailEmail}
+              </span>
+            ) : null}
+            <Link
+              href="/configuracoes"
+              className="flex items-center gap-1 hover:text-foreground"
+            >
+              <Settings className="size-3.5" />
+              Integrações
+            </Link>
+          </div>
+        </PageHeader>
+        <ChatwootInbox integrationId={chatwoot.id} />
+      </div>
+    )
+  }
+
   if (waha) {
     return (
       <div>
@@ -59,8 +87,8 @@ export default async function ConversasPage() {
             Nenhuma conversa conectada
           </h2>
           <p className="max-w-sm text-sm text-muted-foreground">
-            Conecte o WhatsApp (QR) ou uma conta do Gmail em Configurações para
-            que as demandas que chegam por mensagem apareçam aqui.
+            Conecte o Chatwoot, WhatsApp (QR) ou uma conta do Gmail em
+            Configurações para que as conversas apareçam aqui.
           </p>
           <Link
             href="/configuracoes"
@@ -79,7 +107,9 @@ export default async function ConversasPage() {
               const subtitle =
                 i.type === "gmail"
                   ? cfg.email || "Sem conta conectada"
-                  : `sessão ${cfg.session || "prism"}`
+                  : i.type === "chatwoot"
+                    ? cfg.url || "Sem URL configurada"
+                    : `sessão ${cfg.session || "prism"}`
               return (
                 <div
                   key={i.id}
@@ -103,8 +133,7 @@ export default async function ConversasPage() {
           </div>
           <div className="rounded-xl border border-dashed border-border bg-card/40 px-5 py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Conclua a conexão em Configurações (QR do WhatsApp ou login do
-              Gmail) para abrir as conversas aqui.
+              Conclua a conexão em Configurações para abrir as conversas aqui.
             </p>
             <Link
               href="/configuracoes"

@@ -84,6 +84,11 @@ Deno.serve(async (req) => {
     chatId?: string
     text?: string
     limit?: number
+    conversationId?: number
+    status?: string
+    inboxId?: number
+    page?: number
+    private?: boolean
   }
   try {
     body = await req.json()
@@ -270,6 +275,122 @@ Deno.serve(async (req) => {
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Chatwoot: proxy para a API v1
+  // ---------------------------------------------------------------------------
+  if (action.startsWith("chatwoot-")) {
+    const row = await loadIntegration()
+    if (!row) return json({ error: "integração não encontrada" }, 404)
+    const cfg = (row.config ?? {}) as Record<string, string>
+    const cwBase = (cfg.url ?? "").replace(/\/+$/, "")
+    const accountId = cfg.account_id ?? ""
+    const token = row.secret_name
+      ? ((await admin.rpc("app_get_secret", { p_name: row.secret_name })).data ?? "")
+      : ""
+    if (!cwBase || !token)
+      return json({ error: "Informe a URL do Chatwoot e salve o token antes." }, 400)
+    if (!accountId)
+      return json({ error: "Informe o Account ID nas configurações." }, 400)
+
+    const cwHeaders = {
+      "Content-Type": "application/json",
+      api_access_token: token,
+    }
+    const apiBase = `${cwBase}/api/v1/accounts/${accountId}`
+
+    try {
+      if (action === "chatwoot-test") {
+        const res = await ping(`${cwBase}/api/v1/profile`, {
+          headers: cwHeaders,
+        })
+        if (!res.ok) return json({ error: `Chatwoot HTTP ${res.status}` }, 502)
+        const profile = await res.json()
+        await admin
+          .from("integrations")
+          .update({
+            status: "connected",
+            last_sync_at: new Date().toISOString(),
+            last_error: null,
+          })
+          .eq("id", id)
+        return json({ status: "connected", profile })
+      }
+
+      if (action === "chatwoot-inboxes") {
+        const res = await ping(`${apiBase}/inboxes`, { headers: cwHeaders })
+        if (!res.ok) return json({ error: `Chatwoot HTTP ${res.status}` }, 502)
+        const data = await res.json()
+        return json({ inboxes: data.payload ?? data })
+      }
+
+      if (action === "chatwoot-conversations") {
+        const qs = new URLSearchParams()
+        if (body.status) qs.set("status", body.status as string)
+        if (body.inboxId) qs.set("inbox_id", String(body.inboxId))
+        if (body.page) qs.set("page", String(body.page))
+        const q = qs.toString()
+        const res = await ping(
+          `${apiBase}/conversations${q ? `?${q}` : ""}`,
+          { headers: cwHeaders }
+        )
+        if (!res.ok) return json({ error: `Chatwoot HTTP ${res.status}` }, 502)
+        return json(await res.json())
+      }
+
+      if (action === "chatwoot-conversation") {
+        if (!body.conversationId)
+          return json({ error: "faltou conversationId" }, 400)
+        const res = await ping(
+          `${apiBase}/conversations/${body.conversationId}`,
+          { headers: cwHeaders }
+        )
+        if (!res.ok) return json({ error: `Chatwoot HTTP ${res.status}` }, 502)
+        return json(await res.json())
+      }
+
+      if (action === "chatwoot-send") {
+        if (!body.conversationId || !body.text?.trim())
+          return json({ error: "faltou conversationId ou texto" }, 400)
+        const res = await ping(
+          `${apiBase}/conversations/${body.conversationId}/messages`,
+          {
+            method: "POST",
+            headers: cwHeaders,
+            body: JSON.stringify({
+              content: body.text,
+              message_type: "outgoing",
+              private: body.private ?? false,
+            }),
+          }
+        )
+        if (!res.ok) return json({ error: `Chatwoot HTTP ${res.status}` }, 502)
+        return json(await res.json())
+      }
+
+      if (action === "chatwoot-toggle-status") {
+        if (!body.conversationId || !body.status)
+          return json({ error: "faltou conversationId ou status" }, 400)
+        const res = await ping(
+          `${apiBase}/conversations/${body.conversationId}/toggle_status`,
+          {
+            method: "POST",
+            headers: cwHeaders,
+            body: JSON.stringify({ status: body.status }),
+          }
+        )
+        if (!res.ok) return json({ error: `Chatwoot HTTP ${res.status}` }, 502)
+        return json(await res.json())
+      }
+
+      return json({ error: `ação chatwoot desconhecida: ${action}` }, 400)
+    } catch (e) {
+      return json(
+        { error: e instanceof Error ? e.message : "falha Chatwoot" },
+        502
+      )
+    }
+  }
+
   if (action === "testar") {
     const row = await loadIntegration()
     const modelRow =
@@ -320,6 +441,18 @@ Deno.serve(async (req) => {
           message = cfg.email
             ? `Conta ${cfg.email} conectada.`
             : "Clique em Conectar Gmail."
+        } else if (type === "chatwoot") {
+          if (!cfg.url || !cfg.account_id || !secretValue) {
+            status = "pending"
+            message = "Informe URL, Account ID e salve o token."
+          } else {
+            const res = await ping(
+              `${cfg.url.replace(/\/$/, "")}/api/v1/profile`,
+              { headers: { api_access_token: secretValue } }
+            )
+            status = res.ok ? "connected" : "error"
+            message = res.ok ? "Chatwoot respondeu." : `HTTP ${res.status}`
+          }
         } else {
           status = "pending"
           message = "GLPI é verificado na Fase 3."
