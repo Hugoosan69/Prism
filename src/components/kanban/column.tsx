@@ -6,7 +6,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { cn } from "@/lib/utils"
-import type { Task, TaskStatus } from "@/lib/types"
+import type { Company, Label, Source, Task, TaskStatus } from "@/lib/types"
 import { TASK_STATUS_COLORS, TASK_STATUS_HINTS } from "@/lib/types"
 import { SortableTaskCard } from "./task-card"
 
@@ -14,6 +14,9 @@ type Props = {
   status: TaskStatus
   title: string
   tasks: Task[]
+  companiesById: Record<string, Company>
+  sourcesById: Record<string, Source>
+  labelsByTask: Record<string, Label[]>
   onTaskClick: (task: Task) => void
   onToggleHighlight: (task: Task) => void
 }
@@ -22,6 +25,9 @@ export function KanbanColumn({
   status,
   title,
   tasks,
+  companiesById,
+  sourcesById,
+  labelsByTask,
   onTaskClick,
   onToggleHighlight,
 }: Props) {
@@ -33,24 +39,23 @@ export function KanbanColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col gap-2 overflow-hidden border-2 border-border bg-muted/30 transition-colors",
+        "flex flex-col gap-2 overflow-hidden rounded-xl border border-border bg-muted/30 transition-colors",
         isOver && "border-primary/40 bg-muted/60"
       )}
     >
-      {/* Faixa do estágio: identifica a coluna sem pesar na interface */}
       <div
         aria-hidden
-        className="h-[3px] w-full shrink-0"
+        className="h-[3px] w-full shrink-0 rounded-t-xl"
         style={{ background: color }}
       />
-      <div className="flex items-center justify-between px-3 pt-0.5">
-        <span className="font-pixel text-[8px] tracking-[1px] uppercase" title={hint}>
+      <div className="flex items-center justify-between px-3 pt-1">
+        <span
+          className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase"
+          title={hint}
+        >
           {title}
         </span>
-        <span
-          className="font-pixel text-[8px] tabular-nums"
-          style={{ color }}
-        >
+        <span className="font-mono text-[11px] tabular-nums" style={{ color }}>
           {tasks.length}
         </span>
       </div>
@@ -63,10 +68,12 @@ export function KanbanColumn({
             <SortableTaskCard
               key={task.id}
               task={task}
-              // Só as colunas ativas mostram a ordem de urgência
               rank={status === "done" ? undefined : index + 1}
               onClick={() => onTaskClick(task)}
               onToggleHighlight={() => onToggleHighlight(task)}
+              company={task.company_id ? companiesById[task.company_id] : undefined}
+              source={task.source_id ? sourcesById[task.source_id] : undefined}
+              labels={labelsByTask[task.id]}
             />
           ))}
         </div>

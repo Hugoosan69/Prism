@@ -33,7 +33,15 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
 import { cn, formatBytes } from "@/lib/utils"
-import type { Attachment, Task, TaskPriority, TaskStatus } from "@/lib/types"
+import type {
+  Attachment,
+  Company,
+  Label as LabelRow,
+  Source,
+  Task,
+  TaskPriority,
+  TaskStatus,
+} from "@/lib/types"
 import { TASK_PRIORITY_LABELS, TASK_STATUS_LABELS } from "@/lib/types"
 
 type Props = {
@@ -41,7 +49,11 @@ type Props = {
   onOpenChange: (open: boolean) => void
   task: Task | null
   nextPosition: number
+  companies: Company[]
+  sources: Source[]
+  labels: LabelRow[]
   onSaved: (task: Task, isNew: boolean) => void
+  onLabelsSaved: (taskId: string, labelIds: string[]) => void
   onDeleted: (id: string) => void
 }
 
@@ -50,7 +62,11 @@ export function TaskDialog({
   onOpenChange,
   task,
   nextPosition,
+  companies,
+  sources,
+  labels,
   onSaved,
+  onLabelsSaved,
   onDeleted,
 }: Props) {
   const [title, setTitle] = useState("")
@@ -58,7 +74,11 @@ export function TaskDialog({
   const [status, setStatus] = useState<TaskStatus>("todo")
   const [priority, setPriority] = useState<TaskPriority>("medium")
   const [dueDate, setDueDate] = useState("")
-  const [tags, setTags] = useState("")
+  const [companyId, setCompanyId] = useState("")
+  const [sourceId, setSourceId] = useState("")
+  const [externalUrl, setExternalUrl] = useState("")
+  const [labelIds, setLabelIds] = useState<string[]>([])
+  const [initialLabelIds, setInitialLabelIds] = useState<string[]>([])
   const [highlighted, setHighlighted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [attachments, setAttachments] = useState<Attachment[]>([])
@@ -72,9 +92,13 @@ export function TaskDialog({
     setStatus((task?.status as TaskStatus) ?? "todo")
     setPriority((task?.priority as TaskPriority) ?? "medium")
     setDueDate(task?.due_date ?? "")
-    setTags(task?.tags.join(", ") ?? "")
+    setCompanyId(task?.company_id ?? "")
+    setSourceId(task?.source_id ?? "")
+    setExternalUrl(task?.external_url ?? "")
     setHighlighted(task?.highlighted ?? false)
     setAttachments([])
+    setLabelIds([])
+    setInitialLabelIds([])
     if (task) {
       const supabase = createClient()
       supabase
@@ -83,8 +107,41 @@ export function TaskDialog({
         .eq("task_id", task.id)
         .order("created_at")
         .then(({ data }) => setAttachments(data ?? []))
+      supabase
+        .from("task_labels")
+        .select("label_id")
+        .eq("task_id", task.id)
+        .then(({ data }) => {
+          const ids = (data ?? []).map((r) => r.label_id)
+          setLabelIds(ids)
+          setInitialLabelIds(ids)
+        })
     }
   }, [open, task])
+
+  function toggleLabel(id: string) {
+    setLabelIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
+  /** Sincroniza task_labels: insere as novas, remove as retiradas. */
+  async function syncLabels(taskId: string) {
+    const supabase = createClient()
+    const toAdd = labelIds.filter((id) => !initialLabelIds.includes(id))
+    const toRemove = initialLabelIds.filter((id) => !labelIds.includes(id))
+    if (toAdd.length)
+      await supabase
+        .from("task_labels")
+        .insert(toAdd.map((label_id) => ({ task_id: taskId, label_id })))
+    if (toRemove.length)
+      await supabase
+        .from("task_labels")
+        .delete()
+        .eq("task_id", taskId)
+        .in("label_id", toRemove)
+    onLabelsSaved(taskId, labelIds)
+  }
 
   async function handleSave() {
     if (!title.trim()) {
@@ -94,16 +151,17 @@ export function TaskDialog({
     setSaving(true)
     const supabase = createClient()
 
+    // tags (coluna legada) fica fora do payload de propósito: as etiquetas
+    // agora vivem em task_labels; não sobrescrever a coluna preserva o histórico.
     const payload = {
       title: title.trim(),
       description,
       status,
       priority,
       due_date: dueDate || null,
-      tags: tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
+      company_id: companyId || null,
+      source_id: sourceId || null,
+      external_url: externalUrl.trim() || null,
       highlighted,
       completed_at:
         status === "done"
@@ -124,11 +182,13 @@ export function TaskDialog({
           .select()
           .single()
 
-    setSaving(false)
     if (error || !data) {
+      setSaving(false)
       toast.error("Erro ao salvar a tarefa.")
       return
     }
+    await syncLabels(data.id)
+    setSaving(false)
     onSaved(data, !task)
     onOpenChange(false)
   }
@@ -283,13 +343,87 @@ export function TaskDialog({
               />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Empresa</Label>
+              <Select
+                value={companyId || "none"}
+                onValueChange={(v) => setCompanyId((v as string) === "none" ? "" : (v as string))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem empresa</SelectItem>
+                  {companies.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Origem</Label>
+              <Select
+                value={sourceId || "none"}
+                onValueChange={(v) => setSourceId((v as string) === "none" ? "" : (v as string))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem origem</SelectItem>
+                  {sources.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="task-tags">Tags (separadas por vírgula)</Label>
+            <Label>Etiquetas</Label>
+            {labels.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Nenhuma etiqueta cadastrada. Crie em Configurações › Cadastros.
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {labels.map((l) => {
+                  const on = labelIds.includes(l.id)
+                  return (
+                    <button
+                      key={l.id}
+                      type="button"
+                      onClick={() => toggleLabel(l.id)}
+                      className={cn(
+                        "rounded-full border px-2 py-0.5 text-xs font-medium transition-colors",
+                        on ? "border-transparent" : "border-border text-muted-foreground"
+                      )}
+                      style={
+                        on
+                          ? { backgroundColor: `${l.color}22`, color: l.color }
+                          : undefined
+                      }
+                    >
+                      {l.name}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="task-source-url">Link da origem</Label>
             <Input
-              id="task-tags"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="trabalho, urgente"
+              id="task-source-url"
+              value={externalUrl}
+              onChange={(e) => setExternalUrl(e.target.value)}
+              placeholder="https://… (conversa, e-mail ou chamado)"
             />
           </div>
 
@@ -298,7 +432,7 @@ export function TaskDialog({
             onClick={() => setHighlighted((v) => !v)}
             aria-pressed={highlighted}
             className={cn(
-              "flex w-full items-center gap-2.5 border-2 border-border px-3 py-2.5 text-left text-sm transition-colors",
+              "flex w-full items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-left text-sm transition-colors",
               highlighted
                 ? "border-amber-400/50 bg-amber-400/10"
                 : "hover:bg-muted/50"
