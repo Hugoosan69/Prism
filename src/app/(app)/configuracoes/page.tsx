@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { BookOpen, Bot, Brain, LogOut, Palette, Sparkles, UserRound } from "lucide-react"
+import { BookOpen, Bot, Boxes, Brain, LogOut, Palette, Sparkles, UserRound } from "lucide-react"
 import { toast } from "sonner"
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
@@ -25,6 +25,7 @@ import { AiSettingsForm } from "@/components/chat/ai-settings-form"
 import { DirectActionSwitch } from "@/components/chat/direct-action-switch"
 import { VaultSettingsForm } from "@/components/chat/vault-settings-form"
 import { MemoryManager } from "@/components/chat/memory-manager"
+import { Cadastros } from "@/components/configuracoes/cadastros"
 import { createClient } from "@/lib/supabase/client"
 
 type Profile = {
@@ -128,6 +129,10 @@ export default function ConfiguracoesPage() {
             <Sparkles />
             Assistente
           </TabsTrigger>
+          <TabsTrigger value="cadastros">
+            <Boxes />
+            Cadastros
+          </TabsTrigger>
           <TabsTrigger value="conta">
             <UserRound />
             Conta
@@ -199,6 +204,10 @@ export default function ConfiguracoesPage() {
               <AiSettingsForm />
             </div>
           </section>
+        </TabPanel>
+
+        <TabPanel value="cadastros">
+          <Cadastros />
         </TabPanel>
 
         <TabPanel value="conta">
