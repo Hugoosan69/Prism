@@ -10,10 +10,81 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
+      ai_assignments: {
+        Row: {
+          model_id: string | null
+          surface: string
+          updated_at: string
+        }
+        Insert: {
+          model_id?: string | null
+          surface: string
+          updated_at?: string
+        }
+        Update: {
+          model_id?: string | null
+          surface?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_assignments_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "ai_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_models: {
+        Row: {
+          base_url: string
+          created_at: string
+          dialect: string
+          has_key: boolean
+          id: string
+          key_secret_name: string | null
+          label: string
+          last_error: string | null
+          model: string
+          provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          base_url: string
+          created_at?: string
+          dialect?: string
+          has_key?: boolean
+          id?: string
+          key_secret_name?: string | null
+          label: string
+          last_error?: string | null
+          model: string
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          created_at?: string
+          dialect?: string
+          has_key?: boolean
+          id?: string
+          key_secret_name?: string | null
+          label?: string
+          last_error?: string | null
+          model?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       attachments: {
         Row: {
           created_at: string
@@ -138,6 +209,81 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      commands: {
+        Row: {
+          action: string
+          created_at: string
+          defaults: Json
+          delete_message: boolean
+          enabled: boolean
+          id: string
+          position: number
+          send_confirmation: boolean
+          trigger: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          defaults?: Json
+          delete_message?: boolean
+          enabled?: boolean
+          id?: string
+          position?: number
+          send_confirmation?: boolean
+          trigger: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          defaults?: Json
+          delete_message?: boolean
+          enabled?: boolean
+          id?: string
+          position?: number
+          send_confirmation?: boolean
+          trigger?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      companies: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          position: number
+          updated_at: string
+          work_end: string | null
+          work_start: string | null
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          position?: number
+          updated_at?: string
+          work_end?: string | null
+          work_start?: string | null
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          position?: number
+          updated_at?: string
+          work_end?: string | null
+          work_start?: string | null
         }
         Relationships: []
       }
@@ -312,6 +458,97 @@ export type Database = {
         }
         Relationships: []
       }
+      integrations: {
+        Row: {
+          company_id: string | null
+          config: Json
+          created_at: string
+          has_secret: boolean
+          id: string
+          label: string
+          last_error: string | null
+          last_sync_at: string | null
+          secret_name: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          config?: Json
+          created_at?: string
+          has_secret?: boolean
+          id?: string
+          label?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          secret_name?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          config?: Json
+          created_at?: string
+          has_secret?: boolean
+          id?: string
+          label?: string
+          last_error?: string | null
+          last_sync_at?: string | null
+          secret_name?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      labels: {
+        Row: {
+          color: string
+          company_id: string | null
+          created_at: string
+          id: string
+          name: string
+          name_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          name_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          name_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "labels_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       links: {
         Row: {
           created_at: string
@@ -369,6 +606,7 @@ export type Database = {
           id?: string
           kind?: string
           subject: string
+          subject_key?: string | null
           updated_at?: string
         }
         Update: {
@@ -377,6 +615,7 @@ export type Database = {
           id?: string
           kind?: string
           subject?: string
+          subject_key?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -419,9 +658,9 @@ export type Database = {
           drive_app_secret: string
           drive_folder: string
           drive_renewal: string
+          id: boolean
           tavily_api_key: string
           updated_at: string
-          id: boolean
         }
         Insert: {
           acao_direta?: boolean
@@ -433,9 +672,9 @@ export type Database = {
           drive_app_secret?: string
           drive_folder?: string
           drive_renewal?: string
+          id?: boolean
           tavily_api_key?: string
           updated_at?: string
-          id?: boolean
         }
         Update: {
           acao_direta?: boolean
@@ -447,9 +686,9 @@ export type Database = {
           drive_app_secret?: string
           drive_folder?: string
           drive_renewal?: string
+          id?: boolean
           tavily_api_key?: string
           updated_at?: string
-          id?: boolean
         }
         Relationships: []
       }
@@ -492,47 +731,143 @@ export type Database = {
         }
         Relationships: []
       }
+      sources: {
+        Row: {
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          position: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          position?: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          position?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      task_labels: {
+        Row: {
+          created_at: string
+          label_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          label_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          label_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_labels_label_id_fkey"
+            columns: ["label_id"]
+            isOneToOne: false
+            referencedRelation: "labels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_labels_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
+          company_id: string | null
           completed_at: string | null
+          context: string
           created_at: string
           description: string
           due_date: string | null
+          external_id: string | null
+          external_type: string | null
+          external_url: string | null
           highlighted: boolean
           id: string
           position: number
           priority: string
+          source_id: string | null
           status: string
           tags: string[]
           title: string
         }
         Insert: {
+          company_id?: string | null
           completed_at?: string | null
+          context?: string
           created_at?: string
           description?: string
           due_date?: string | null
+          external_id?: string | null
+          external_type?: string | null
+          external_url?: string | null
           highlighted?: boolean
           id?: string
           position?: number
           priority?: string
+          source_id?: string | null
           status?: string
           tags?: string[]
           title: string
         }
         Update: {
+          company_id?: string | null
           completed_at?: string | null
+          context?: string
           created_at?: string
           description?: string
           due_date?: string | null
+          external_id?: string | null
+          external_type?: string | null
+          external_url?: string | null
           highlighted?: boolean
           id?: string
           position?: number
           priority?: string
+          source_id?: string | null
           status?: string
           tags?: string[]
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -558,12 +893,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -587,11 +922,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -612,11 +947,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -637,11 +972,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -654,11 +989,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

@@ -14,6 +14,56 @@ export type Expense = Tables<"expenses">
 export type ExpensePayment = Tables<"expense_payments">
 export type Income = Tables<"incomes">
 
+// Central de demandas
+export type Company = Tables<"companies">
+export type Source = Tables<"sources">
+export type Label = Tables<"labels">
+export type TaskLabel = Tables<"task_labels">
+export type Command = Tables<"commands">
+export type Integration = Tables<"integrations">
+export type AiModel = Tables<"ai_models">
+export type AiAssignment = Tables<"ai_assignments">
+
+export type IntegrationType = "waha" | "gmail" | "glpi" | "zoho"
+export type IntegrationStatus =
+  | "disconnected"
+  | "connected"
+  | "error"
+  | "pending"
+export type CommandAction =
+  | "create_card"
+  | "close_card"
+  | "create_reminder"
+  | "label_conversation"
+export type AiSurface = "chat" | "gmail" | "chamados"
+
+export const INTEGRATION_TYPE_LABELS: Record<IntegrationType, string> = {
+  waha: "WhatsApp (WAHA)",
+  gmail: "Gmail",
+  glpi: "GLPI",
+  zoho: "Zoho",
+}
+
+export const INTEGRATION_STATUS_LABELS: Record<IntegrationStatus, string> = {
+  disconnected: "Desconectado",
+  connected: "Conectado",
+  error: "Erro",
+  pending: "Pendente",
+}
+
+export const COMMAND_ACTION_LABELS: Record<CommandAction, string> = {
+  create_card: "Criar card",
+  close_card: "Fechar card da conversa",
+  create_reminder: "Criar lembrete",
+  label_conversation: "Etiquetar conversa",
+}
+
+export const AI_SURFACE_LABELS: Record<AiSurface, string> = {
+  chat: "Chat",
+  gmail: "Gmail",
+  chamados: "Chamados",
+}
+
 export type ExpenseKind = "fixa" | "variavel"
 export type ExpenseRecurrence = "mensal" | "parcelada" | "unica"
 
