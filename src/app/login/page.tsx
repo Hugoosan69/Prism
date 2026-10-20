@@ -15,12 +15,12 @@ type Mode = "entrar" | "recuperar"
 /* O login é também o índice da ferramenta: cada módulo com sua faixa
    do espectro, o mesmo vocabulário da navegação interna. */
 const MODULE_HINTS: Record<string, string> = {
-  Dashboard: "o dia num relance",
-  Kanban: "tarefas em fluxo",
-  SQL: "consultas prontas para copiar",
-  Arquivos: "pastas e uploads",
-  Notas: "markdown com auto-save",
-  Favoritos: "links que você sempre volta",
+  Painel: "o dia num relance",
+  Demandas: "tudo que é trabalho vira card",
+  Conversas: "WhatsApp e e-mail num lugar só",
+  Conhecimento: "notas, SQL, links e favoritos",
+  Finanças: "despesas, pagamentos e receitas",
+  Assistente: "o chat com memória",
 }
 
 export default function LoginPage() {
@@ -85,7 +85,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push("/dashboard")
+    router.push("/painel")
     router.refresh()
   }
 
@@ -94,10 +94,10 @@ export default function LoginPage() {
       <div className="grid w-full max-w-4xl items-center gap-12 lg:grid-cols-[1fr_22rem] lg:gap-20">
         {/* Manifesto: o que existe atrás desta porta */}
         <aside className="hidden lg:block">
-          <p className="prism-rise font-pixel text-[8px] tracking-[1px] text-muted-foreground uppercase">
+          <p className="prism-rise text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
             Organizador pessoal
           </p>
-          <h1 className="prism-rise mt-3 font-pixel text-[18px] tracking-[1px] [--rise-delay:60ms]">
+          <h1 className="prism-rise mt-3 text-3xl font-semibold tracking-tight [--rise-delay:60ms]">
             Prism
           </h1>
 
@@ -152,7 +152,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="border-2 border-border bg-card p-7 retro-shadow">
+          <div className="rounded-xl border border-border bg-card p-7 shadow-[var(--shadow-md)]">
             {mode === "recuperar" && (
               <div className="mb-6 space-y-1">
                 <h2 className="text-base font-semibold">Recuperar senha</h2>
@@ -230,12 +230,12 @@ export default function LoginPage() {
 
               <div aria-live="polite" className="space-y-2 empty:hidden">
                 {error && (
-                  <p className="border-2 border-destructive/25 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                  <p className="rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                     {error}
                   </p>
                 )}
                 {notice && (
-                  <p className="border-2 border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                  <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
                     {notice}
                   </p>
                 )}

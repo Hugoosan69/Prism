@@ -1,96 +1,62 @@
-import type { ComponentType, SVGProps } from "react"
+import type { LucideIcon } from "lucide-react"
 import {
-  IconChat,
-  IconDashboard,
-  IconFinancas,
-  IconNotas,
-  IconFavoritos,
-  IconKanban,
-  IconSQL,
-  IconLinks,
-} from "@/components/brand/pixel-icons"
+  BookOpen,
+  LayoutDashboard,
+  ListTodo,
+  MessagesSquare,
+  Settings,
+  Sparkles,
+  Wallet,
+} from "lucide-react"
 
-export type PixelIcon = ComponentType<SVGProps<SVGSVGElement>>
+export type NavChild = { title: string; href: string }
 
-export type NavModule = "pessoal" | "trabalho"
-
-export type NavItem = {
+export type NavArea = {
   title: string
   href: string
-  icon: PixelIcon
-  accent: string
-  module: NavModule
+  icon: LucideIcon
+  /** Subdestinos (ex.: Conhecimento agrupa Notas, SQL, Links, Favoritos). */
+  children?: NavChild[]
 }
 
-export const CHAT_ITEM = {
-  title: "Chat",
-  href: "/chat",
-  icon: IconChat,
-  accent: "var(--retro-green)",
-} as const
-
-export const DEFAULT_MODULE_ITEMS: NavItem[] = [
+/**
+ * As sete áreas da central de demandas (linha Orvexa). A navegação é dado, não
+ * código: reorganizar o menu é editar esta lista. As telas de cada área
+ * continuam existindo por baixo — só mudam de lugar aqui.
+ *
+ * Configurações mora no rodapé (SETTINGS_AREA), não nesta lista.
+ */
+export const NAV_AREAS: NavArea[] = [
+  { title: "Painel", href: "/painel", icon: LayoutDashboard },
+  { title: "Demandas", href: "/kanban", icon: ListTodo },
+  { title: "Conversas", href: "/conversas", icon: MessagesSquare },
   {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: IconDashboard,
-    accent: "var(--spec-dashboard)",
-    module: "pessoal",
-  },
-  {
-    title: "Finanças",
-    href: "/financas",
-    icon: IconFinancas,
-    accent: "var(--spec-financas)",
-    module: "pessoal",
-  },
-  {
-    title: "Notas",
+    title: "Conhecimento",
     href: "/notas",
-    icon: IconNotas,
-    accent: "var(--spec-notas)",
-    module: "pessoal",
+    icon: BookOpen,
+    children: [
+      { title: "Notas", href: "/notas" },
+      { title: "SQL", href: "/sql" },
+      { title: "Links", href: "/links" },
+      { title: "Favoritos", href: "/favoritos" },
+    ],
   },
-  {
-    title: "Favoritos",
-    href: "/favoritos",
-    icon: IconFavoritos,
-    accent: "var(--spec-favoritos)",
-    module: "pessoal",
-  },
-  {
-    title: "Kanban",
-    href: "/kanban",
-    icon: IconKanban,
-    accent: "var(--spec-kanban)",
-    module: "trabalho",
-  },
-  {
-    title: "SQL",
-    href: "/sql",
-    icon: IconSQL,
-    accent: "var(--spec-sql)",
-    module: "trabalho",
-  },
-  {
-    title: "Links",
-    href: "/links",
-    icon: IconLinks,
-    accent: "var(--spec-arquivos)",
-    module: "trabalho",
-  },
+  { title: "Finanças", href: "/financas", icon: Wallet },
+  { title: "Assistente", href: "/chat", icon: Sparkles },
 ]
 
-/** Flat list for backwards compat (search, topbar, login animation, etc.) */
-export const NAV_ITEMS = [
-  { ...CHAT_ITEM, module: "pessoal" as NavModule },
-  ...DEFAULT_MODULE_ITEMS,
-]
-
-export function accentForPath(pathname: string) {
-  if (pathname.startsWith("/chat")) return CHAT_ITEM.accent
-  return (
-    DEFAULT_MODULE_ITEMS.find((item) => pathname.startsWith(item.href))?.accent ??
-    "var(--retro-green)"
-  )
+export const SETTINGS_AREA: NavArea = {
+  title: "Configurações",
+  href: "/configuracoes",
+  icon: Settings,
 }
+
+/**
+ * Lista plana para usos legados (animação do login, buscas). Mantida para não
+ * quebrar quem iterava a navegação antiga.
+ */
+export const NAV_ITEMS = NAV_AREAS.map((area) => ({
+  title: area.title,
+  href: area.href,
+  accent: "var(--primary)",
+}))

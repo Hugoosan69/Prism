@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LogOut } from "lucide-react"
+import { ChevronRight, LogOut } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import {
   Sidebar,
@@ -19,59 +19,53 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { CHAT_ITEM, DEFAULT_MODULE_ITEMS, type NavItem } from "@/lib/navigation"
-import { useModuleConfig } from "@/lib/use-module-config"
-import { IconSettings } from "@/components/brand/pixel-icons"
+import { NAV_AREAS, SETTINGS_AREA, type NavArea } from "@/lib/navigation"
 import { PrismMark } from "@/components/brand/prism-mark"
 
-function ModuleGroup({
-  label,
-  color,
-  items,
+function isAreaActive(area: NavArea, pathname: string) {
+  if (area.children?.length) {
+    return area.children.some((child) => pathname.startsWith(child.href))
+  }
+  return pathname.startsWith(area.href)
+}
+
+/** Área com subdestinos (Conhecimento): abre o grupo quando algum filho está ativo. */
+function AreaWithChildren({
+  area,
   pathname,
 }: {
-  label: string
-  color: string
-  items: NavItem[]
+  area: NavArea
   pathname: string
 }) {
+  const active = isAreaActive(area, pathname)
   return (
-    <Collapsible defaultOpen className="group/module">
-      <CollapsibleTrigger className="flex w-full items-center gap-2 border-b-2 border-border px-3 pb-1.5 group-data-[collapsible=icon]:hidden">
-        <span
-          className="font-pixel text-[9px] tracking-[1px] uppercase"
-          style={{ color }}
+    <Collapsible defaultOpen={active} className="group/area">
+      <SidebarMenuItem>
+        <CollapsibleTrigger
+          className={`flex h-8 w-full items-center gap-2.5 rounded-lg px-2 text-sm font-medium outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring ${
+            active ? "text-sidebar-foreground" : ""
+          }`}
         >
-          {label}
-        </span>
-        <span
-          className="ml-auto font-pixel text-[9px] text-retro-text-muted transition-transform"
-          aria-hidden
-        >
-          <span className="block transition-transform group-data-[open]/module:rotate-0 -rotate-90">
-            ▼
-          </span>
-        </span>
-      </CollapsibleTrigger>
+          <area.icon
+            className="size-[15px] shrink-0"
+            style={{ color: active ? "var(--primary)" : "var(--muted-foreground)" }}
+          />
+          <span>{area.title}</span>
+          <ChevronRight className="ml-auto size-3.5 text-muted-foreground transition-transform group-data-[open]/area:rotate-90 group-data-[collapsible=icon]:hidden" />
+        </CollapsibleTrigger>
+      </SidebarMenuItem>
       <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
-        <SidebarMenu className="mt-2 gap-0.5 border-l-2 border-retro-border-muted ml-3 pl-2.5">
-          {items.map((item) => {
-            const isActive = pathname.startsWith(item.href)
+        <SidebarMenu className="mt-0.5 ml-5 gap-0.5 border-l border-sidebar-border pl-2.5">
+          {area.children!.map((child) => {
+            const childActive = pathname.startsWith(child.href)
             return (
-              <SidebarMenuItem key={item.href}>
+              <SidebarMenuItem key={child.href}>
                 <SidebarMenuButton
-                  isActive={isActive}
-                  tooltip={item.title}
-                  render={<Link href={item.href} />}
-                  className="gap-2.5 font-medium"
+                  isActive={childActive}
+                  render={<Link href={child.href} />}
+                  className="h-7 gap-2 rounded-lg text-[13px] font-medium"
                 >
-                  <item.icon
-                    width={13}
-                    height={13}
-                    className="shrink-0"
-                    style={{ color: isActive ? color : "var(--retro-icon-muted)" }}
-                  />
-                  <span>{item.title}</span>
+                  <span>{child.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )
@@ -86,10 +80,6 @@ export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
 
-  const { moduleMap } = useModuleConfig()
-  const pessoal = DEFAULT_MODULE_ITEMS.filter((i) => (moduleMap[i.href] ?? i.module) === "pessoal")
-  const trabalho = DEFAULT_MODULE_ITEMS.filter((i) => (moduleMap[i.href] ?? i.module) === "trabalho")
-
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
@@ -97,76 +87,75 @@ export function AppSidebar() {
     router.refresh()
   }
 
-  const chatActive = pathname.startsWith(CHAT_ITEM.href)
-
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <div className="flex h-11 items-center gap-2.5 px-2">
-          <PrismMark className="size-6 shrink-0" />
-          <span className="font-pixel text-[10px] tracking-[1px] group-data-[collapsible=icon]:hidden">
-            PRISM
+          <PrismMark className="size-7 shrink-0" />
+          <span className="text-sm font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
+            Prism
           </span>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={chatActive}
-                tooltip={CHAT_ITEM.title}
-                render={<Link href={CHAT_ITEM.href} />}
-                className={`gap-2.5 font-medium ${chatActive ? "border-2 border-retro-green bg-retro-elevated retro-shadow" : ""}`}
-              >
-                <CHAT_ITEM.icon
-                  width={14}
-                  height={14}
-                  className="shrink-0"
-                  style={{ color: chatActive ? "var(--retro-green)" : "var(--retro-icon-muted)" }}
-                />
-                <span>{CHAT_ITEM.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+          <SidebarMenu className="gap-0.5">
+            {NAV_AREAS.map((area) => {
+              if (area.children?.length) {
+                return (
+                  <AreaWithChildren
+                    key={area.href}
+                    area={area}
+                    pathname={pathname}
+                  />
+                )
+              }
+              const active = isAreaActive(area, pathname)
+              return (
+                <SidebarMenuItem key={area.href}>
+                  <SidebarMenuButton
+                    isActive={active}
+                    tooltip={area.title}
+                    render={<Link href={area.href} />}
+                    className="gap-2.5 rounded-lg font-medium"
+                  >
+                    <area.icon
+                      className="size-[15px] shrink-0"
+                      style={{
+                        color: active
+                          ? "var(--primary)"
+                          : "var(--muted-foreground)",
+                      }}
+                    />
+                    <span>{area.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
           </SidebarMenu>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <ModuleGroup
-            label="Pessoal"
-            color="var(--retro-green)"
-            items={pessoal}
-            pathname={pathname}
-          />
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <ModuleGroup
-            label="Trabalho"
-            color="var(--retro-amber)"
-            items={trabalho}
-            pathname={pathname}
-          />
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              isActive={pathname.startsWith("/configuracoes")}
-              tooltip="Configurações"
-              render={<Link href="/configuracoes" />}
-              className="gap-2.5 font-medium"
+              isActive={pathname.startsWith(SETTINGS_AREA.href)}
+              tooltip={SETTINGS_AREA.title}
+              render={<Link href={SETTINGS_AREA.href} />}
+              className="gap-2.5 rounded-lg font-medium"
             >
-              <IconSettings width={13} height={13} className="shrink-0" style={{ color: "var(--retro-icon-muted)" }} />
-              <span>Configurações</span>
+              <SETTINGS_AREA.icon
+                className="size-[15px] shrink-0"
+                style={{ color: "var(--muted-foreground)" }}
+              />
+              <span>{SETTINGS_AREA.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Sair do Prism"
               onClick={handleLogout}
-              className="gap-2.5 font-medium text-muted-foreground hover:text-destructive"
+              className="gap-2.5 rounded-lg font-medium text-muted-foreground hover:text-destructive"
             >
               <LogOut className="size-4" />
               <span>Sair</span>

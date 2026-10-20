@@ -7,7 +7,6 @@ import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { BookOpen, Bot, Brain, LogOut, Palette, Sparkles, UserRound } from "lucide-react"
 import { toast } from "sonner"
-import { ModuleConfig } from "@/components/layout/module-config"
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -354,17 +353,6 @@ export default function ConfiguracoesPage() {
                   setTheme(checked ? "dark" : "light")
                 }
               />
-            </div>
-          </section>
-
-          <section className="space-y-3">
-            <SectionTitle>Módulos</SectionTitle>
-            <div className="space-y-3 rounded-xl border bg-card p-5">
-              <p className="text-xs text-muted-foreground">
-                Arraste os módulos entre Pessoal e Trabalho para organizar a
-                sidebar do jeito que faz sentido pra você.
-              </p>
-              <ModuleConfig />
             </div>
           </section>
         </TabPanel>

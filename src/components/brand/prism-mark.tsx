@@ -21,16 +21,16 @@ export function PrismMark({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="prism-mark-corpo" x1="0.1" y1="0.9" x2="0.95" y2="0.05">
-          <stop offset="0%" stopColor="#4f46e5" />
-          <stop offset="35%" stopColor="#2563eb" />
-          <stop offset="72%" stopColor="#3b82f6" />
-          <stop offset="100%" stopColor="#22d3ee" />
+          <stop offset="0%" stopColor="#7c6cff" />
+          <stop offset="40%" stopColor="#6d5ef8" />
+          <stop offset="75%" stopColor="#5b8def" />
+          <stop offset="100%" stopColor="#38c6e6" />
         </linearGradient>
         {/* O brilho diagonal que atravessa a perna da letra. */}
         <linearGradient id="prism-mark-brilho" x1="0.1" y1="1" x2="0.8" y2="0.1">
-          <stop offset="0%" stopColor="#a855f7" />
+          <stop offset="0%" stopColor="#b98cff" />
           <stop offset="55%" stopColor="#8b5cf6" />
-          <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+          <stop offset="100%" stopColor="#7c6cff" stopOpacity="0" />
         </linearGradient>
         <clipPath id="prism-mark-recorte">
           <path d="M25 8 H56 a26 26 0 0 1 0 52 H42 v25 a7 7 0 0 1 -7 7 H25 a7 7 0 0 1 -7 -7 V15 a7 7 0 0 1 7 -7 Z" />

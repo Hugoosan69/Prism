@@ -1,17 +1,18 @@
 import type { Metadata } from "next"
-import { Space_Grotesk, Press_Start_2P } from "next/font/google"
+import { Manrope, JetBrains_Mono } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
-const spaceGrotesk = Space_Grotesk({
+// Linha Orvexa: Manrope em texto e títulos (aposenta a fonte pixel), JetBrains
+// Mono com tabular-nums para números e código.
+const manrope = Manrope({
   variable: "--font-sans",
   subsets: ["latin"],
 })
 
-const pressStart2P = Press_Start_2P({
-  variable: "--font-pixel",
-  weight: "400",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 })
 
@@ -28,7 +29,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${spaceGrotesk.variable} ${pressStart2P.variable}`}
+      className={`${manrope.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <body className="antialiased">
